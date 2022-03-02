@@ -7,11 +7,19 @@
 
 sf::RenderWindow* window;
 
+enum class Input {
+	None	= 0b000000,
+	Forward = 0b000001,
+	Left	= 0b000010,
+	Right	= 0b000100,
+	Back	= 0b001000,
+	Up		= 0b010000,
+	Down	= 0b100000
+};
+
 int main() {
-	bool moveLeft = false;
-	bool moveRight = false;
-	bool moveForward = false;
-	bool moveBackward = false;
+	// Inputs
+	short userInput = (short)Input::Down;
 
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
@@ -25,7 +33,7 @@ int main() {
 		shapeTypes[i] = -1;
 	}
 	
-	sf::Vector3f position(0, 0, 0);
+	sf::Vector3f position(1, 0, 0);
 
 	std::cout << shapeTypes[0] << std::endl;
 
@@ -35,6 +43,9 @@ int main() {
 
 	// Load shapeTypes into the shader
 	rayMarchingShader.setUniformArray("shapeTypes", shapeTypes, 100);
+
+	// Send initial position to shader
+	rayMarchingShader.setUniform("camPosition", position);
 
 	std::cout << "Creating Window" << std::endl;
 	// Create the window
@@ -46,85 +57,42 @@ int main() {
 
 	// Clock
 	sf::Clock deltaClock;
+	float deltaTime = 0;
 
 	// Check for window events
 	sf::Event event;
 
 	// Run until the window is closed
 	while (window->isOpen()) {
-
-		if (moveForward == true) {
-			position.z += 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
-		if (moveLeft == true) {
-			position.x -= 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
-		if (moveRight == true) {
-			position.x += 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
-		if (moveBackward == true) {
-			position.z -= 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
 		while (window->pollEvent(event)) {
 			// Close the window if the user tries to
 			if (event.type == sf::Event::Closed) {
 				window->close();
 			}
 
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::W) {
-					moveForward = true;
-				}
-			}
-
+			// Start off with no input
 			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::W) {
-					moveForward = false;
-				}
+				userInput = (short)Input::None;
 			}
 
 			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::A) {
-					moveLeft = true;
+				if (event.key.code == sf::Keyboard::W && (userInput & (short)Input::Forward) != (short)Input::Forward) {
+					userInput += (short)Input::Forward;
 				}
-			}
 
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::A) {
-					moveLeft = false;
+				if (event.key.code == sf::Keyboard::A && (userInput & (short)Input::Left) != (short)Input::Left) {
+					userInput += (short)Input::Left;
 				}
-			}
 
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::D) {
-					moveRight = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::D) {
-					moveRight = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
 				if (event.key.code == sf::Keyboard::S) {
-					moveBackward = true;
+					userInput += (short)Input::Back;
 				}
-			}
 
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::S) {
-					moveBackward = false;
+				if (event.key.code == sf::Keyboard::D) {
+					userInput = (short)Input::Right;
 				}
+
+				printf("%i", userInput);
 			}
 		}
 
@@ -136,8 +104,32 @@ int main() {
 
 		// End the frame and actually draw it
 		window->display();
-		
+
+		deltaTime = deltaClock.getElapsedTime().asSeconds();
 		deltaClock.restart();
+
+		// Update here
+
+		// Check userInput
+		if (userInput & Input::None != Input::None) {
+			if (userInput & Input::Forward == Input::Forward) {
+				position.z += 1 * deltaTime;
+			}
+
+			if (userInput & Input::Left == Input::Left) {
+				position.x -= 1 * deltaTime;
+			}
+
+			if (userInput & Input::Back == Input::Back) {
+				position.z -= 1 * deltaTime;
+			}
+
+			if (userInput & Input::Right == Input::Right) {
+				position.x += 1 * deltaTime;
+			}
+
+			rayMarchingShader.setUniform("camPosition", position);
+		}
 	}
 
 	delete window;
