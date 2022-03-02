@@ -44,10 +44,34 @@ int main() {
 	// Some shapes
 	sf::RectangleShape screen(sf::Vector2f(window->getSize().x, window->getSize().y));
 
+	// Clock
+	sf::Clock deltaClock;
+
+	// Check for window events
+	sf::Event event;
+
 	// Run until the window is closed
 	while (window->isOpen()) {
-		// Check for window events
-		sf::Event event;
+
+		if (moveForward == true) {
+			position.z += 10000 * deltaClock.getElapsedTime().asSeconds();
+			rayMarchingShader.setUniform("camPosition", position);
+		}
+
+		if (moveLeft == true) {
+			position.x -= 10000 * deltaClock.getElapsedTime().asSeconds();
+			rayMarchingShader.setUniform("camPosition", position);
+		}
+
+		if (moveRight == true) {
+			position.x += 10000 * deltaClock.getElapsedTime().asSeconds();
+			rayMarchingShader.setUniform("camPosition", position);
+		}
+
+		if (moveBackward == true) {
+			position.z -= 10000 * deltaClock.getElapsedTime().asSeconds();
+			rayMarchingShader.setUniform("camPosition", position);
+		}
 
 		while (window->pollEvent(event)) {
 			// Close the window if the user tries to
@@ -56,72 +80,64 @@ int main() {
 			}
 
 			if (event.type == sf::Event::KeyPressed) {
-
-				switch (event.key.code)
-				{
-				case sf::Keyboard::W:
-					moveForward == true;
-					break;
-				case sf::Keyboard::A:
-					moveLeft == true;
-					break;
-				case sf::Keyboard::S:
-					moveBackward == true;
-					break;
-				case sf::Keyboard::D:
-					moveRight == true;
-					break;
-				default:
-					break;
-				}
-			} else if (event.type == sf::Event::KeyReleased) {
-
-				switch (event.key.code)
-				{
-				case sf::Keyboard::W:
-					moveForward == false;
-					break;
-				case sf::Keyboard::A:
-					moveLeft == false;
-					break;
-				case sf::Keyboard::S:
-					moveBackward == false;
-					break;
-				case sf::Keyboard::D:
-					moveRight == false;
-					break;
-				default:
-					break;
+				if (event.key.code == sf::Keyboard::W) {
+					moveForward = true;
 				}
 			}
 
-			if (moveForward) {
-				position.z += 0.1f;
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::W) {
+					moveForward = false;
+				}
 			}
 
-			if (moveLeft) {
-				position.x -= 0.1f;
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::A) {
+					moveLeft = true;
+				}
 			}
 
-			if (moveBackward) {
-				position.z -= 0.1f;
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::A) {
+					moveLeft = false;
+				}
 			}
 
-			if (moveRight) {
-				position.x += 0.1f;
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::D) {
+					moveRight = true;
+				}
 			}
 
-			rayMarchingShader.setUniform("camPosition", position);
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::D) {
+					moveRight = false;
+				}
+			}
 
-			// Draw the background color
-			window->clear(sf::Color::Black);
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::S) {
+					moveBackward = true;
+				}
+			}
 
-			// Draw here
-			window->draw(screen, &rayMarchingShader);
-
-			// End the frame and actually draw it
-			window->display();
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::S) {
+					moveBackward = false;
+				}
+			}
 		}
+
+		// Draw the background color
+		window->clear(sf::Color::Black);
+
+		// Draw here
+		window->draw(screen, &rayMarchingShader);
+
+		// End the frame and actually draw it
+		window->display();
+		
+		deltaClock.restart();
 	}
 
 	delete window;

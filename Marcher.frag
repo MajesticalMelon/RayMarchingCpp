@@ -15,7 +15,7 @@ struct Sphere {
     }
 };
 
-uniform vec3 camPosition = vec3(5, 0, 0);
+uniform vec3 camPosition = vec3(0, 0, 0);
 
 uniform float shapeTypes[100];
 Sphere spheres[30];
