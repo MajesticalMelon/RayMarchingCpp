@@ -1,3 +1,5 @@
+#version 150
+
 uniform sampler2D texture;
 
 struct Shape {
@@ -5,14 +7,13 @@ struct Shape {
     vec3 rotation;
     vec4 color;
     int type;
+
+    float signedDistance;
 };
 
 struct Sphere {
     Shape base;
     float radius;
-    float signedDistance(vec3 p) {
-        return length(p - base.position) - radius;
-    }
 };
 
 uniform vec3 camPosition = vec3(0, 0, 0);
@@ -27,19 +28,20 @@ const int MAX_STEPS = 30;
 
 vec4 difCol = vec4(1., 1., 1., 1.);
 
-void AddShapes() {
+void AddShapes(vec3 p) {
     Sphere sphere;
     sphere.base.position = vec3(0, 0, 5);
     sphere.base.rotation = vec3(0);
     sphere.base.color = vec4(1, 0, 0, 1);
     sphere.base.type = 0;
     sphere.radius = 1.;
+    sphere.base.signedDistance = length(p - sphere.base.position) - sphere.radius;
     spheres[0] = sphere;
 }
 
 float SceneSDF(vec3 p, out vec4 col) {
 
-    AddShapes();
+    AddShapes(p);
 
     float distToScene = p.y + 1;
     col = vec4(1, 1, 0, 1);
@@ -50,15 +52,16 @@ float SceneSDF(vec3 p, out vec4 col) {
     sphere.base.color = vec4(1, 0, 0, 1);
     sphere.base.type = 0;
     sphere.radius = 1.;
+    sphere.base.signedDistance = length(p - sphere.base.position) - sphere.radius;
 
     for (int i = 0; i < 30; i++) {
-        if ((int)shapeTypes[i] == -1) {
+        if (shapeTypes[i] == -1) {
             break;
         }
 
-        if ((int)shapeTypes[i] == 1) {
-            if (spheres[i].signedDistance(p) < distToScene) {
-                distToScene = spheres[i].signedDistance(p);
+        if (shapeTypes[i] == 1) {
+            if (spheres[i].base.signedDistance < distToScene) {
+                distToScene = spheres[i].base.signedDistance;
                 col = spheres[i].base.color;
             }
         }

@@ -7,7 +7,7 @@
 
 sf::RenderWindow* window;
 
-enum class Input {
+enum Input {
 	None	= 0b000000,
 	Forward = 0b000001,
 	Left	= 0b000010,
@@ -19,7 +19,7 @@ enum class Input {
 
 int main() {
 	// Inputs
-	short userInput = (short)Input::Down;
+	short userInput = Down;
 
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
@@ -72,27 +72,26 @@ int main() {
 
 			// Start off with no input
 			if (event.type == sf::Event::KeyReleased) {
-				userInput = (short)Input::None;
+				userInput = (short) None;
 			}
-
+			
+			// TODO: Fix hitching when switching quickly between inputs
 			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::W && (userInput & (short)Input::Forward) != (short)Input::Forward) {
-					userInput += (short)Input::Forward;
+				if (event.key.code == sf::Keyboard::W && (userInput & Forward) != Forward) {
+					userInput += Forward;
 				}
 
-				if (event.key.code == sf::Keyboard::A && (userInput & (short)Input::Left) != (short)Input::Left) {
-					userInput += (short)Input::Left;
+				if (event.key.code == sf::Keyboard::A && (userInput & (short) Left) != (short) Left) {
+					userInput += (short) Left;
 				}
 
 				if (event.key.code == sf::Keyboard::S) {
-					userInput += (short)Input::Back;
+					userInput += (short) Back;
 				}
 
 				if (event.key.code == sf::Keyboard::D) {
-					userInput = (short)Input::Right;
+					userInput = (short) Right;
 				}
-
-				printf("%i", userInput);
 			}
 		}
 
@@ -111,22 +110,34 @@ int main() {
 		// Update here
 
 		// Check userInput
-		if (userInput & Input::None != Input::None) {
-			if (userInput & Input::Forward == Input::Forward) {
-				position.z += 1 * deltaTime;
+		if ((userInput |  None) !=  None) {
+			if ((userInput &  Forward) ==  Forward) {
+				position.z += 5 * deltaTime;
 			}
 
-			if (userInput & Input::Left == Input::Left) {
+			if ((userInput & Left) == Left) {
+				position.x -= 5 * deltaTime;
+			}
+
+			if ((userInput & Back) == Back) {
+				position.z -= 5 * deltaTime;
+			}
+
+			if ((userInput & Right) == Right) {
+				position.x += 5 * deltaTime;
+			}
+
+			/*if (userInput &  Left ==  Left) {
 				position.x -= 1 * deltaTime;
 			}
 
-			if (userInput & Input::Back == Input::Back) {
+			if (userInput &  Back ==  Back) {
 				position.z -= 1 * deltaTime;
 			}
 
-			if (userInput & Input::Right == Input::Right) {
+			if (userInput &  Right ==  Right) {
 				position.x += 1 * deltaTime;
-			}
+			}*/
 
 			rayMarchingShader.setUniform("camPosition", position);
 		}
