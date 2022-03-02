@@ -8,6 +8,11 @@
 sf::RenderWindow* window;
 
 int main() {
+	bool moveLeft = false;
+	bool moveRight = false;
+	bool moveForward = false;
+	bool moveBackward = false;
+
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
 
@@ -39,8 +44,6 @@ int main() {
 	// Some shapes
 	sf::RectangleShape screen(sf::Vector2f(window->getSize().x, window->getSize().y));
 
-	char userInput = ' ';
-
 	// Run until the window is closed
 	while (window->isOpen()) {
 		// Check for window events
@@ -52,34 +55,63 @@ int main() {
 				window->close();
 			}
 
-			
 			if (event.type == sf::Event::KeyPressed) {
-				std::cout << "Key press event detected" << std::endl;
 
 				switch (event.key.code)
 				{
 				case sf::Keyboard::W:
-					std::cout << "Incrementing position.z" << std::endl;
-					position.z += 0.1f;
+					moveForward == true;
 					break;
 				case sf::Keyboard::A:
-					std::cout << "Decrementing position.x" << std::endl;
-					position.x -= 0.1f;
+					moveLeft == true;
 					break;
 				case sf::Keyboard::S:
-					std::cout << "Decrementing position.z" << std::endl;
-					position.z -= 0.1f;
+					moveBackward == true;
 					break;
 				case sf::Keyboard::D:
-					std::cout << "Incrementing position.x" << std::endl;
-					position.x += 0.1f;
+					moveRight == true;
 					break;
 				default:
 					break;
 				}
+			} else if (event.type == sf::Event::KeyReleased) {
 
-				rayMarchingShader.setUniform("camPosition", position);
+				switch (event.key.code)
+				{
+				case sf::Keyboard::W:
+					moveForward == false;
+					break;
+				case sf::Keyboard::A:
+					moveLeft == false;
+					break;
+				case sf::Keyboard::S:
+					moveBackward == false;
+					break;
+				case sf::Keyboard::D:
+					moveRight == false;
+					break;
+				default:
+					break;
+				}
 			}
+
+			if (moveForward) {
+				position.z += 0.1f;
+			}
+
+			if (moveLeft) {
+				position.x -= 0.1f;
+			}
+
+			if (moveBackward) {
+				position.z -= 0.1f;
+			}
+
+			if (moveRight) {
+				position.x += 0.1f;
+			}
+
+			rayMarchingShader.setUniform("camPosition", position);
 
 			// Draw the background color
 			window->clear(sf::Color::Black);
