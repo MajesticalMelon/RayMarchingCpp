@@ -16,6 +16,11 @@ struct Sphere {
     float radius;
 };
 
+struct Box {
+    Shape base;
+    vec3 size;
+};
+
 uniform vec3 camPosition = vec3(0, 0, 0);
 
 uniform float shapeTypes[100];
@@ -54,6 +59,14 @@ float SceneSDF(vec3 p, out vec4 col) {
     sphere.radius = 1.;
     sphere.base.signedDistance = length(p - sphere.base.position) - sphere.radius;
 
+    Box box;
+    box.base.position = vec3 (1, 1, 2);
+    box.base.rotation = vec3(1, 0, 0);
+    box.base.color = vec4(0, 1, 0, 1);
+    box.base.type = 2;
+    box.size = vec3(1, 1, 1);
+    box.base.signedDistance = length(max(abs(p - box.base.position) - box.size, 0.));
+
     for (int i = 0; i < 30; i++) {
         if (shapeTypes[i] == -1) {
             break;
@@ -65,6 +78,11 @@ float SceneSDF(vec3 p, out vec4 col) {
                 col = spheres[i].base.color;
             }
         }
+    }
+
+    if (box.base.signedDistance < distToScene) {
+        distToScene = box.base.signedDistance;
+        col = box.base.color;
     }
 
 	return distToScene;

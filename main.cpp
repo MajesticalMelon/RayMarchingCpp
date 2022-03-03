@@ -8,11 +8,6 @@
 sf::RenderWindow* window;
 
 int main() {
-	bool moveLeft = false;
-	bool moveRight = false;
-	bool moveForward = false;
-	bool moveBackward = false;
-
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
 
@@ -53,78 +48,10 @@ int main() {
 	// Run until the window is closed
 	while (window->isOpen()) {
 
-		if (moveForward == true) {
-			position.z += 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
-		if (moveLeft == true) {
-			position.x -= 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
-		if (moveRight == true) {
-			position.x += 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
-		if (moveBackward == true) {
-			position.z -= 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
-		}
-
 		while (window->pollEvent(event)) {
 			// Close the window if the user tries to
 			if (event.type == sf::Event::Closed) {
 				window->close();
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::W) {
-					moveForward = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::W) {
-					moveForward = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::A) {
-					moveLeft = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::A) {
-					moveLeft = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::D) {
-					moveRight = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::D) {
-					moveRight = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::S) {
-					moveBackward = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::S) {
-					moveBackward = false;
-				}
 			}
 		}
 
