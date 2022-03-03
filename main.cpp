@@ -7,7 +7,23 @@
 
 sf::RenderWindow* window;
 
+enum Input {
+	None	= 0b000000,
+	Forward = 0b000001,
+	Left	= 0b000010,
+	Right	= 0b000100,
+	Back	= 0b001000,
+	Up		= 0b010000,
+	Down	= 0b100000
+};
+
 int main() {
+<<<<<<< HEAD
+=======
+	// Inputs
+	short userInput = Down;
+
+>>>>>>> Input
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
 
@@ -20,7 +36,7 @@ int main() {
 		shapeTypes[i] = -1;
 	}
 	
-	sf::Vector3f position(0, 0, 0);
+	sf::Vector3f position(1, 0, 0);
 
 	std::cout << shapeTypes[0] << std::endl;
 
@@ -30,6 +46,9 @@ int main() {
 
 	// Load shapeTypes into the shader
 	rayMarchingShader.setUniformArray("shapeTypes", shapeTypes, 100);
+
+	// Send initial position to shader
+	rayMarchingShader.setUniform("camPosition", position);
 
 	std::cout << "Creating Window" << std::endl;
 	// Create the window
@@ -41,18 +60,49 @@ int main() {
 
 	// Clock
 	sf::Clock deltaClock;
+	float deltaTime = 0;
 
 	// Check for window events
 	sf::Event event;
 
 	// Run until the window is closed
 	while (window->isOpen()) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> Input
 		while (window->pollEvent(event)) {
 			// Close the window if the user tries to
 			if (event.type == sf::Event::Closed) {
 				window->close();
 			}
+<<<<<<< HEAD
+=======
+
+			// Start off with no input
+			if (event.type == sf::Event::KeyReleased) {
+				userInput = (short) None;
+			}
+			
+			// TODO: Fix hitching when switching quickly between inputs
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::W && (userInput & Forward) != Forward) {
+					userInput += Forward;
+				}
+
+				if (event.key.code == sf::Keyboard::A && (userInput & (short) Left) != (short) Left) {
+					userInput += (short) Left;
+				}
+
+				if (event.key.code == sf::Keyboard::S) {
+					userInput += (short) Back;
+				}
+
+				if (event.key.code == sf::Keyboard::D) {
+					userInput = (short) Right;
+				}
+			}
+>>>>>>> Input
 		}
 
 		// Draw the background color
@@ -63,8 +113,44 @@ int main() {
 
 		// End the frame and actually draw it
 		window->display();
-		
+
+		deltaTime = deltaClock.getElapsedTime().asSeconds();
 		deltaClock.restart();
+
+		// Update here
+
+		// Check userInput
+		if ((userInput |  None) !=  None) {
+			if ((userInput &  Forward) ==  Forward) {
+				position.z += 5 * deltaTime;
+			}
+
+			if ((userInput & Left) == Left) {
+				position.x -= 5 * deltaTime;
+			}
+
+			if ((userInput & Back) == Back) {
+				position.z -= 5 * deltaTime;
+			}
+
+			if ((userInput & Right) == Right) {
+				position.x += 5 * deltaTime;
+			}
+
+			/*if (userInput &  Left ==  Left) {
+				position.x -= 1 * deltaTime;
+			}
+
+			if (userInput &  Back ==  Back) {
+				position.z -= 1 * deltaTime;
+			}
+
+			if (userInput &  Right ==  Right) {
+				position.x += 1 * deltaTime;
+			}*/
+
+			rayMarchingShader.setUniform("camPosition", position);
+		}
 	}
 
 	delete window;

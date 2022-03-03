@@ -33,6 +33,7 @@ const int MAX_STEPS = 1000;
 
 vec4 difCol = vec4(1., 1., 1., 1.);
 
+<<<<<<< HEAD
 vec3 rotateX(vec3 p, float theta) {
     return vec3(
         p.x,
@@ -67,6 +68,8 @@ vec3 rotateXYZ(vec3 p, vec3 rot) {
     return rotated;
 }
 
+=======
+>>>>>>> Input
 void AddShapes(vec3 p) {
     Sphere sphere;
     sphere.base.position = vec3(0, 0, 5);
@@ -93,6 +96,7 @@ float SceneSDF(vec3 p, out vec4 col) {
     sphere.radius = 1.;
     sphere.base.signedDistance = length(p - sphere.base.position) - sphere.radius;
 
+<<<<<<< HEAD
     Box box;
     box.base.position = vec3 (0, 1, 6);
     box.base.rotation = vec3(5, 2, 0);
@@ -118,6 +122,19 @@ float SceneSDF(vec3 p, out vec4 col) {
     if (box.base.signedDistance < distToScene) {
         distToScene = box.base.signedDistance;
         col = box.base.color;
+=======
+    for (int i = 0; i < 30; i++) {
+        if (shapeTypes[i] == -1) {
+            break;
+        }
+
+        if (shapeTypes[i] == 1) {
+            if (spheres[i].base.signedDistance < distToScene) {
+                distToScene = spheres[i].base.signedDistance;
+                col = spheres[i].base.color;
+            }
+        }
+>>>>>>> Input
     }
 
 	return distToScene;
