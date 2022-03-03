@@ -5,6 +5,11 @@
 #include <iostream>
 #include <conio.h>
 
+sf::Vector3f rotateX(sf::Vector3f p, float theta);
+sf::Vector3f rotateY(sf::Vector3f p, float theta);
+sf::Vector3f rotateZ(sf::Vector3f p, float theta);
+sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot);
+
 sf::RenderWindow* window;
 
 enum Input {
@@ -21,8 +26,6 @@ int main() {
 	// Inputs
 	short userInput = Down;
 
-	bool moveBackward = false;
-
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
 
@@ -35,7 +38,9 @@ int main() {
 		shapeTypes[i] = -1;
 	}
 	
-	sf::Vector3f position(1, 0, 0);
+	sf::Vector3f position(0, 1, 0);
+	sf::Vector3f rotation(0, 0, 0);
+	sf::Vector3f look(0, 0, 1);
 
 	std::cout << shapeTypes[0] << std::endl;
 
@@ -48,6 +53,7 @@ int main() {
 
 	// Send initial position to shader
 	rayMarchingShader.setUniform("camPosition", position);
+	rayMarchingShader.setUniform("camRotation", rotation);
 
 	std::cout << "Creating Window" << std::endl;
 	// Create the window
@@ -64,82 +70,54 @@ int main() {
 	// Check for window events
 	sf::Event event;
 
+	sf::Mouse::setPosition(window->getPosition() + sf::Vector2i(400, 300));
+
 	while (window->isOpen()) {
 
-		if (moveForward == true) {
-			position.z += 10000 * deltaClock.getElapsedTime().asSeconds();
-			rayMarchingShader.setUniform("camPosition", position);
+		while (window->pollEvent(event)) {
+			if (event.type == sf::Event::Closed) {
+				window->close();
+			}
 
 			// Start off with no input
 			if (event.type == sf::Event::KeyReleased) {
-				userInput = (short) None;
+				userInput = (short)None;
 			}
-			
+
+			if (event.type == sf::Event::MouseMoved) {
+				rotation.y += (event.mouseMove.x - 400) * deltaTime * 0.0001f;
+				rotation.x += (event.mouseMove.y - 300) * deltaTime * 0.0001f;
+
+				rayMarchingShader.setUniform("camRotation", rotation);
+
+				//sf::Mouse::setPosition(window->getPosition() + sf::Vector2i(400, 300));
+			}
+
 			// TODO: Fix hitching when switching quickly between inputs
 			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::Escape) {
+					window->close();
+				}
+
 				if (event.key.code == sf::Keyboard::W && (userInput & Forward) != Forward) {
 					userInput += Forward;
 				}
 
-				if (event.key.code == sf::Keyboard::A && (userInput & (short) Left) != (short) Left) {
-					userInput += (short) Left;
+				if (event.key.code == sf::Keyboard::A && (userInput & (short)Left) != (short)Left) {
+					userInput += (short)Left;
 				}
 
 				if (event.key.code == sf::Keyboard::S) {
-					userInput += (short) Back;
+					userInput += (short)Back;
 				}
 
 				if (event.key.code == sf::Keyboard::D) {
-					userInput = (short) Right;
-				}
-			}
-				if (event.key.code == sf::Keyboard::W) {
-					moveForward = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::W) {
-					moveForward = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::A) {
-					moveLeft = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::A) {
-					moveLeft = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::D) {
-					moveRight = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::D) {
-					moveRight = false;
-				}
-			}
-
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::S) {
-					moveBackward = true;
-				}
-			}
-
-			if (event.type == sf::Event::KeyReleased) {
-				if (event.key.code == sf::Keyboard::S) {
-					moveBackward = false;
+					userInput = (short)Right;
 				}
 			}
 		}
+
+		printf("%f, %f\n", rotation.x, rotation.y);
 
 		// Draw the background color
 		window->clear(sf::Color::Black);
@@ -158,36 +136,58 @@ int main() {
 		// Check userInput
 		if ((userInput |  None) !=  None) {
 			if ((userInput &  Forward) ==  Forward) {
-				position.z += 5 * deltaTime;
+				position += look * deltaTime;
 			}
 
 			if ((userInput & Left) == Left) {
-				position.x -= 5 * deltaTime;
+				position -= sf::Vector3f(look.z, 0, -look.x) * deltaTime;
 			}
 
 			if ((userInput & Back) == Back) {
-				position.z -= 5 * deltaTime;
+				position -= look * deltaTime;
 			}
 
 			if ((userInput & Right) == Right) {
-				position.x += 5 * deltaTime;
+				position += sf::Vector3f(look.z, 0, -look.x) * deltaTime;
 			}
-
-			/*if (userInput &  Left ==  Left) {
-				position.x -= 1 * deltaTime;
-			}
-
-			if (userInput &  Back ==  Back) {
-				position.z -= 1 * deltaTime;
-			}
-
-			if (userInput &  Right ==  Right) {
-				position.x += 1 * deltaTime;
-			}*/
 
 			rayMarchingShader.setUniform("camPosition", position);
 		}
 	}
 
 	delete window;
+}
+
+sf::Vector3f rotateX(sf::Vector3f p, float theta) {
+	return sf::Vector3f(
+		p.x,
+		p.y * cos(theta) - p.z * sin(theta),
+		p.y * sin(theta) + p.z * cos(theta)
+	);
+}
+
+sf::Vector3f rotateY(sf::Vector3f p, float theta) {
+	return sf::Vector3f(
+		p.x * cos(theta) + p.z * sin(theta),
+		p.y,
+		-p.x * sin(theta) + p.z * cos(theta)
+	);
+}
+
+sf::Vector3f rotateZ(sf::Vector3f p, float theta) {
+	return sf::Vector3f(
+		p.x * cos(theta) - p.y * sin(theta),
+		p.x * sin(theta) + p.y * cos(theta),
+		p.z
+	);
+}
+
+sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot) {
+	sf::Vector3f rotated = p;
+
+	rotated = rotateX(rotated, rot.x);
+	rotated = rotateY(rotated, rot.y);
+	rotated = rotateZ(rotated, rot.z);
+
+	return rotated;
 }

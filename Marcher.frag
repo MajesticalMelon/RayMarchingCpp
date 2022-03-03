@@ -22,6 +22,7 @@ struct Box {
 };
 
 uniform vec3 camPosition = vec3(0, 1, 0);
+uniform vec3 camRotation = vec3(0);
 
 uniform float shapeTypes[100];
 Sphere spheres[30];
@@ -186,6 +187,7 @@ void main() {
     vec2 uv = (vec2(gl_FragCoord.xy) / vec2(800, 600)) - 0.5;
 
     vec3 rd = normalize(vec3(uv.x, uv.y, 1));
+    rd = rotateXYZ(rd, camRotation);
 
     float dist = RayMarch(camPosition, rd, difCol);
 
