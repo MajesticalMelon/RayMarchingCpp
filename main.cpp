@@ -18,12 +18,11 @@ enum Input {
 };
 
 int main() {
-<<<<<<< HEAD
-=======
 	// Inputs
 	short userInput = Down;
 
->>>>>>> Input
+	bool moveBackward = false;
+
 	// Different kinds of shapes
 	float* shapeTypes = new float[100];
 
@@ -65,19 +64,11 @@ int main() {
 	// Check for window events
 	sf::Event event;
 
-	// Run until the window is closed
 	while (window->isOpen()) {
-<<<<<<< HEAD
 
-=======
->>>>>>> Input
-		while (window->pollEvent(event)) {
-			// Close the window if the user tries to
-			if (event.type == sf::Event::Closed) {
-				window->close();
-			}
-<<<<<<< HEAD
-=======
+		if (moveForward == true) {
+			position.z += 10000 * deltaClock.getElapsedTime().asSeconds();
+			rayMarchingShader.setUniform("camPosition", position);
 
 			// Start off with no input
 			if (event.type == sf::Event::KeyReleased) {
@@ -102,7 +93,52 @@ int main() {
 					userInput = (short) Right;
 				}
 			}
->>>>>>> Input
+				if (event.key.code == sf::Keyboard::W) {
+					moveForward = true;
+				}
+			}
+
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::W) {
+					moveForward = false;
+				}
+			}
+
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::A) {
+					moveLeft = true;
+				}
+			}
+
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::A) {
+					moveLeft = false;
+				}
+			}
+
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::D) {
+					moveRight = true;
+				}
+			}
+
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::D) {
+					moveRight = false;
+				}
+			}
+
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::S) {
+					moveBackward = true;
+				}
+			}
+
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::S) {
+					moveBackward = false;
+				}
+			}
 		}
 
 		// Draw the background color
