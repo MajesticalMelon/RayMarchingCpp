@@ -2,6 +2,13 @@
 
 uniform sampler2D texture;
 
+uniform vec3 camPosition = vec3(0, 1, 0);
+uniform vec3 camRotation = vec3(0);
+
+uniform float shapeTypes[100];
+
+uniform float time = 0;
+
 struct Shape {
     vec3 position;
     vec3 rotation;
@@ -21,10 +28,6 @@ struct Box {
     vec3 size;
 };
 
-uniform vec3 camPosition = vec3(0, 1, 0);
-uniform vec3 camRotation = vec3(0);
-
-uniform float shapeTypes[100];
 Sphere spheres[30];
 
 // Constants for the Ray Marching Algorithm
@@ -61,9 +64,9 @@ vec3 rotateZ(vec3 p, float theta) {
 vec3 rotateXYZ(vec3 p, vec3 rot) {
     vec3 rotated = p;
 
-    rotated = rotateX(rotated, rot.x);
-    rotated = rotateY(rotated, rot.y);
     rotated = rotateZ(rotated, rot.z);
+    rotated = rotateY(rotated, rot.y);
+    rotated = rotateX(rotated, rot.x);
 
     return rotated;
 }
@@ -96,7 +99,7 @@ float SceneSDF(vec3 p, out vec4 col) {
 
     Box box;
     box.base.position = vec3 (0, 1, 6);
-    box.base.rotation = vec3(5, 2, 0);
+    box.base.rotation = vec3(5, time, 0);
     box.base.color = vec4(0, 1, 0, 1);
     box.base.type = 2;
     box.size = vec3(1, 1, 1);

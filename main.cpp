@@ -64,6 +64,7 @@ int main() {
 	sf::RectangleShape screen(sf::Vector2f(window->getSize().x, window->getSize().y));
 
 	// Clock
+	sf::Clock gameClock;
 	sf::Clock deltaClock;
 	float deltaTime = 0;
 
@@ -74,6 +75,7 @@ int main() {
 	sf::Vector2i prevMousePos;
 
 	while (window->isOpen()) {
+		rayMarchingShader.setUniform("time", gameClock.getElapsedTime().asSeconds());
 
 		while (window->pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
@@ -208,9 +210,9 @@ sf::Vector3f rotateZ(sf::Vector3f p, float theta) {
 sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot) {
 	sf::Vector3f rotated = p;
 
-	rotated = rotateX(rotated, rot.x);
-	rotated = rotateY(rotated, rot.y);
 	rotated = rotateZ(rotated, rot.z);
+	rotated = rotateY(rotated, rot.y);
+	rotated = rotateX(rotated, rot.x);
 
 	return rotated;
 }
