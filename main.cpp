@@ -10,6 +10,8 @@ sf::Vector3f rotateY(sf::Vector3f p, float theta);
 sf::Vector3f rotateZ(sf::Vector3f p, float theta);
 sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot);
 
+sf::Vector3f normalize(sf::Vector3f p);
+
 sf::RenderWindow* window;
 
 enum Input {
@@ -67,6 +69,10 @@ int main() {
 	// Some shapes
 	sf::RectangleShape screen(sf::Vector2f(window->getSize().x, window->getSize().y));
 
+	// Camera variables
+	float walkScalar = 3;
+	float rotateScalar = 0.7;
+
 	// Clock
 	sf::Clock gameClock;
 	sf::Clock deltaClock;
@@ -76,7 +82,8 @@ int main() {
 	sf::Event event;
 
 	while (window->isOpen()) {
-		rayMarchingShader.setUniform("time", gameClock.getElapsedTime().asSeconds());
+		// Rotate the user's look vector
+		look = rotateXYZ(sf::Vector3f(0, 0, 1), rotation);
 
 		while (window->pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
@@ -178,6 +185,7 @@ int main() {
 					userInput -= LookDown;
 					break;
 				}
+
 			}
 		}
 
@@ -197,44 +205,47 @@ int main() {
 
 		// Check userInput
 		if ((userInput |  None) !=  None) {
+
 			// Movement
 			if ((userInput &  Forward) ==  Forward) {
-				position += look * deltaTime;
+				position += look * deltaTime * walkScalar;
 			}
 
 			if ((userInput & Left) == Left) {
-				position -= sf::Vector3f(look.z, 0, -look.x) * deltaTime;
+				position -= sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
 			}
 
 			if ((userInput & Back) == Back) {
-				position -= look * deltaTime;
+				position -= look * deltaTime * walkScalar;
 			}
 
 			if ((userInput & Right) == Right) {
-				position += sf::Vector3f(look.z, 0, -look.x) * deltaTime;
+				position += sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
 			}
-
-			rayMarchingShader.setUniform("camPosition", position);
 
 			// Rotation
 			if ((userInput & LookRight) == LookRight) {
-				rotation.y += deltaTime;
+				rotation.y += (deltaTime * rotateScalar);
 			}
 
 			if ((userInput & LookLeft) == LookLeft) {
-				rotation.y -= deltaTime;
+				rotation.y -= (deltaTime * rotateScalar);
 			}
 
 			if ((userInput & LookUp) == LookUp) {
-				rotation.x -= deltaTime;
+				rotation.x -= (deltaTime * rotateScalar);
 			}
 
 			if ((userInput & LookDown) == LookDown) {
-				rotation.x += deltaTime;
+				rotation.x += (deltaTime * rotateScalar);
 			}
-
-			rayMarchingShader.setUniform("camRotation", rotation);
 		}
+
+		rayMarchingShader.setUniform("time", gameClock.getElapsedTime().asSeconds());
+
+		rayMarchingShader.setUniform("camPosition", position);
+		rayMarchingShader.setUniform("camRotation", rotation);
+
 	}
 
 	delete window;
@@ -267,9 +278,19 @@ sf::Vector3f rotateZ(sf::Vector3f p, float theta) {
 sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot) {
 	sf::Vector3f rotated = p;
 
-	rotated = rotateZ(rotated, rot.z);
-	rotated = rotateY(rotated, rot.y);
 	rotated = rotateX(rotated, rot.x);
+	rotated = rotateY(rotated, rot.y);
+	rotated = rotateZ(rotated, rot.z);
 
 	return rotated;
+}
+
+sf::Vector3f normalize(sf::Vector3f p) {
+	float magnitude = sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
+
+	if (magnitude > 1) {
+		return p / magnitude;
+	}
+
+	return p;
 }

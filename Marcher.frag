@@ -64,9 +64,9 @@ vec3 rotateZ(vec3 p, float theta) {
 vec3 rotateXYZ(vec3 p, vec3 rot) {
     vec3 rotated = p;
 
-    rotated = rotateZ(rotated, rot.z);
-    rotated = rotateY(rotated, rot.y);
     rotated = rotateX(rotated, rot.x);
+    rotated = rotateY(rotated, rot.y);
+    rotated = rotateZ(rotated, rot.z);
 
     return rotated;
 }
