@@ -13,13 +13,17 @@ sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot);
 sf::RenderWindow* window;
 
 enum Input {
-	None	= 0b000000,
-	Forward = 0b000001,
-	Left	= 0b000010,
-	Right	= 0b000100,
-	Back	= 0b001000,
-	Up		= 0b010000,
-	Down	= 0b100000
+	None		= 0b0000000000,
+	Forward		= 0b0000000001,
+	Left		= 0b0000000010,
+	Right		= 0b0000000100,
+	Back		= 0b0000001000,
+	Up			= 0b0000010000,
+	Down		= 0b0000100000,
+	LookLeft	= 0b0001000000,
+	LookRight	= 0b0010000000,
+	LookUp		= 0b0100000000,
+	LookDown	= 0b1000000000,
 };
 
 int main() {
@@ -71,9 +75,6 @@ int main() {
 	// Check for window events
 	sf::Event event;
 
-	sf::Mouse::setPosition(window->getPosition() + sf::Vector2i(400, 300));
-	sf::Vector2i prevMousePos;
-
 	while (window->isOpen()) {
 		rayMarchingShader.setUniform("time", gameClock.getElapsedTime().asSeconds());
 
@@ -82,23 +83,15 @@ int main() {
 				window->close();
 			}
 
-			if (event.type == sf::Event::MouseMoved && prevMousePos.x != window->getPosition().x + 400) {
-				printf("%d, %d\n", event.mouseMove.x, prevMousePos.x);
-				rotation.y += (event.mouseMove.x - prevMousePos.x) * deltaTime * 0.1f;
-				rotation.x += (event.mouseMove.y - prevMousePos.y) * deltaTime * 0.1f;
-
-				rayMarchingShader.setUniform("camRotation", rotation);
-
-				prevMousePos = sf::Vector2i(event.mouseMove.x, event.mouseMove.y);
-			}
-
 			// Go in the direction that was pressed
 			if (event.type == sf::Event::KeyPressed) {
 				if (event.key.code == sf::Keyboard::Escape) {
 					window->close();
 				}
 
-				// Don;t keep adding if already going in that direction
+				// Movement
+
+				// Don't keep adding if already going in that direction
 				if (event.key.code == sf::Keyboard::W && (userInput & Forward) != Forward) {
 					userInput += Forward;
 					break;
@@ -118,10 +111,33 @@ int main() {
 					userInput += Right;
 					break;
 				}
+
+				// Rotation
+				if (event.key.code == sf::Keyboard::Right && (userInput & LookRight) != LookRight) {
+					userInput += LookRight;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::Left && (userInput & LookLeft) != LookLeft) {
+					userInput += LookLeft;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::Up && (userInput & LookUp) != LookUp) {
+					userInput += LookUp;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::Down && (userInput & LookDown) != LookDown) {
+					userInput += LookDown;
+					break;
+				}
 			}
 
 			// Stop moving in whichever direction was released
 			if (event.type == sf::Event::KeyReleased) {
+
+				// Movement
 				if (event.key.code == sf::Keyboard::W) {
 					userInput -= Forward;
 					break;
@@ -139,6 +155,27 @@ int main() {
 
 				if (event.key.code == sf::Keyboard::D) {
 					userInput -= Right;
+					break;
+				}
+
+				// Rotation
+				if (event.key.code == sf::Keyboard::Right) {
+					userInput -= LookRight;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::Left) {
+					userInput -= LookLeft;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::Up) {
+					userInput -= LookUp;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::Down) {
+					userInput -= LookDown;
 					break;
 				}
 			}
@@ -160,6 +197,7 @@ int main() {
 
 		// Check userInput
 		if ((userInput |  None) !=  None) {
+			// Movement
 			if ((userInput &  Forward) ==  Forward) {
 				position += look * deltaTime;
 			}
@@ -177,6 +215,25 @@ int main() {
 			}
 
 			rayMarchingShader.setUniform("camPosition", position);
+
+			// Rotation
+			if ((userInput & LookRight) == LookRight) {
+				rotation.y += deltaTime;
+			}
+
+			if ((userInput & LookLeft) == LookLeft) {
+				rotation.y -= deltaTime;
+			}
+
+			if ((userInput & LookUp) == LookUp) {
+				rotation.x -= deltaTime;
+			}
+
+			if ((userInput & LookDown) == LookDown) {
+				rotation.x += deltaTime;
+			}
+
+			rayMarchingShader.setUniform("camRotation", rotation);
 		}
 	}
 
