@@ -71,6 +71,7 @@ int main() {
 	sf::Event event;
 
 	sf::Mouse::setPosition(window->getPosition() + sf::Vector2i(400, 300));
+	sf::Vector2i prevMousePos;
 
 	while (window->isOpen()) {
 
@@ -79,45 +80,67 @@ int main() {
 				window->close();
 			}
 
-			// Start off with no input
-			if (event.type == sf::Event::KeyReleased) {
-				userInput = (short)None;
-			}
-
-			if (event.type == sf::Event::MouseMoved) {
-				rotation.y += (event.mouseMove.x - 400) * deltaTime * 0.0001f;
-				rotation.x += (event.mouseMove.y - 300) * deltaTime * 0.0001f;
+			if (event.type == sf::Event::MouseMoved && prevMousePos.x != window->getPosition().x + 400) {
+				printf("%d, %d\n", event.mouseMove.x, prevMousePos.x);
+				rotation.y += (event.mouseMove.x - prevMousePos.x) * deltaTime * 0.1f;
+				rotation.x += (event.mouseMove.y - prevMousePos.y) * deltaTime * 0.1f;
 
 				rayMarchingShader.setUniform("camRotation", rotation);
 
-				//sf::Mouse::setPosition(window->getPosition() + sf::Vector2i(400, 300));
+				prevMousePos = sf::Vector2i(event.mouseMove.x, event.mouseMove.y);
 			}
 
-			// TODO: Fix hitching when switching quickly between inputs
+			// Go in the direction that was pressed
 			if (event.type == sf::Event::KeyPressed) {
 				if (event.key.code == sf::Keyboard::Escape) {
 					window->close();
 				}
 
+				// Don;t keep adding if already going in that direction
 				if (event.key.code == sf::Keyboard::W && (userInput & Forward) != Forward) {
 					userInput += Forward;
+					break;
 				}
 
-				if (event.key.code == sf::Keyboard::A && (userInput & (short)Left) != (short)Left) {
-					userInput += (short)Left;
+				if (event.key.code == sf::Keyboard::A && (userInput & Left) != Left) {
+					userInput += Left;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::S && (userInput & Back) != Back) {
+					userInput += Back;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::D && (userInput & Right) != Right) {
+					userInput += Right;
+					break;
+				}
+			}
+
+			// Stop moving in whichever direction was released
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::W) {
+					userInput -= Forward;
+					break;
+				}
+
+				if (event.key.code == sf::Keyboard::A) {
+					userInput -= Left;
+					break;
 				}
 
 				if (event.key.code == sf::Keyboard::S) {
-					userInput += (short)Back;
+					userInput -= Back;
+					break;
 				}
 
 				if (event.key.code == sf::Keyboard::D) {
-					userInput = (short)Right;
+					userInput -= Right;
+					break;
 				}
 			}
 		}
-
-		printf("%f, %f\n", rotation.x, rotation.y);
 
 		// Draw the background color
 		window->clear(sf::Color::Black);
