@@ -20,9 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Rotations.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Marcher.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Rotations.h" />
+    <ClInclude Include="Shape.h" />
+    <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

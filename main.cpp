@@ -5,14 +5,20 @@
 #include <iostream>
 #include <conio.h>
 
-sf::Vector3f rotateX(sf::Vector3f p, float theta);
-sf::Vector3f rotateY(sf::Vector3f p, float theta);
-sf::Vector3f rotateZ(sf::Vector3f p, float theta);
-sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot);
+#include "Rotations.h"
+#include "Shape.h"
+#include "Sphere.h"
 
-sf::Vector3f normalize(sf::Vector3f p);
+using namespace sf;
 
-sf::RenderWindow* window;
+Vector3f rotateX(Vector3f p, float theta);
+Vector3f rotateY(Vector3f p, float theta);
+Vector3f rotateZ(Vector3f p, float theta);
+Vector3f rotateXYZ(Vector3f p, Vector3f rot);
+
+Vector3f normalize(Vector3f p);
+
+void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad);
 
 enum Input {
 	None		= 0b0000000000,
@@ -28,160 +34,148 @@ enum Input {
 	LookDown	= 0b1000000000,
 };
 
+// Shape stuff
+std::vector<Sphere> spheres;
+
+Shader rayMarchingShader;
+
 int main() {
+	std::cout << "Creating Window" << std::endl;
+	RenderWindow window(VideoMode(800, 600), "Ray Marcher");
+
 	// Inputs
 	short userInput = Down;
 
-	// Different kinds of shapes
-	float* shapeTypes = new float[100];
+	// Camera
+	Vector3f position(0, 1, 0);
+	Vector3f rotation(0, 0, 0);
+	Vector3f look(0, 0, 1);
 
-	// Each type starts at -1 unless modified
-	for (int i = 0; i < 100; i++) {
-		if (i == 0) {
-			shapeTypes[i] = 1;
-			continue;
-		}
-		shapeTypes[i] = -1;
-	}
-	
-	sf::Vector3f position(0, 1, 0);
-	sf::Vector3f rotation(0, 0, 0);
-	sf::Vector3f look(0, 0, 1);
-
-	std::cout << shapeTypes[0] << std::endl;
-
-	std::cout << "Initializing Marcher" << std::endl;
-	sf::Shader rayMarchingShader;
-	rayMarchingShader.loadFromFile("Marcher.frag", sf::Shader::Type::Fragment);
-
-	// Load shapeTypes into the shader
-	rayMarchingShader.setUniformArray("shapeTypes", shapeTypes, 100);
+	// Ray marcher
+	std::cout << "Loading Marcher" << std::endl;
+	rayMarchingShader.loadFromFile("Marcher.frag", Shader::Type::Fragment);
 
 	// Send initial position to shader
 	rayMarchingShader.setUniform("camPosition", position);
 	rayMarchingShader.setUniform("camRotation", rotation);
 
-	std::cout << "Creating Window" << std::endl;
-	// Create the window
-	window = new sf::RenderWindow(sf::VideoMode(800, 600), "Ray Marcher");
-
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
-	sf::RectangleShape screen(sf::Vector2f(window->getSize().x, window->getSize().y));
+	RectangleShape screen(Vector2f(window.getSize().x, window.getSize().y));
 
 	// Camera variables
 	float walkScalar = 3;
-	float rotateScalar = 0.7;
+	float rotateScalar = 0.7f;
 
 	// Clock
-	sf::Clock gameClock;
-	sf::Clock deltaClock;
+	Clock gameClock;
+	Clock deltaClock;
 	float deltaTime = 0;
 
 	// Check for window events
-	sf::Event event;
+	Event event;
 
-	while (window->isOpen()) {
+	while (window.isOpen()) {
 		// Rotate the user's look vector
-		look = rotateXYZ(sf::Vector3f(0, 0, 1), rotation);
+		look = rotateXYZ(Vector3f(0, 0, 1), rotation);
 
-		while (window->pollEvent(event)) {
-			if (event.type == sf::Event::Closed) {
-				window->close();
+		while (window.pollEvent(event)) {
+			if (event.type == Event::Closed) {
+				window.close();
 			}
 
 			// Go in the direction that was pressed
-			if (event.type == sf::Event::KeyPressed) {
-				if (event.key.code == sf::Keyboard::Escape) {
-					window->close();
+			if (event.type == Event::KeyPressed) {
+				if (event.key.code == Keyboard::Escape) {
+					window.close();
 				}
 
 				// Movement
 
 				// Don't keep adding if already going in that direction
-				if (event.key.code == sf::Keyboard::W && (userInput & Forward) != Forward) {
+				if (event.key.code == Keyboard::W && (userInput & Forward) != Forward) {
 					userInput += Forward;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::A && (userInput & Left) != Left) {
+				if (event.key.code == Keyboard::A && (userInput & Left) != Left) {
 					userInput += Left;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::S && (userInput & Back) != Back) {
+				if (event.key.code == Keyboard::S && (userInput & Back) != Back) {
 					userInput += Back;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::D && (userInput & Right) != Right) {
+				if (event.key.code == Keyboard::D && (userInput & Right) != Right) {
 					userInput += Right;
 					break;
 				}
 
 				// Rotation
-				if (event.key.code == sf::Keyboard::Right && (userInput & LookRight) != LookRight) {
+				if (event.key.code == Keyboard::Right && (userInput & LookRight) != LookRight) {
 					userInput += LookRight;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::Left && (userInput & LookLeft) != LookLeft) {
+				if (event.key.code == Keyboard::Left && (userInput & LookLeft) != LookLeft) {
 					userInput += LookLeft;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::Up && (userInput & LookUp) != LookUp) {
+				if (event.key.code == Keyboard::Up && (userInput & LookUp) != LookUp) {
 					userInput += LookUp;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::Down && (userInput & LookDown) != LookDown) {
+				if (event.key.code == Keyboard::Down && (userInput & LookDown) != LookDown) {
 					userInput += LookDown;
 					break;
 				}
 			}
 
 			// Stop moving in whichever direction was released
-			if (event.type == sf::Event::KeyReleased) {
+			if (event.type == Event::KeyReleased) {
 
 				// Movement
-				if (event.key.code == sf::Keyboard::W) {
+				if (event.key.code == Keyboard::W) {
 					userInput -= Forward;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::A) {
+				if (event.key.code == Keyboard::A) {
 					userInput -= Left;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::S) {
+				if (event.key.code == Keyboard::S) {
 					userInput -= Back;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::D) {
+				if (event.key.code == Keyboard::D) {
 					userInput -= Right;
 					break;
 				}
 
 				// Rotation
-				if (event.key.code == sf::Keyboard::Right) {
+				if (event.key.code == Keyboard::Right) {
 					userInput -= LookRight;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::Left) {
+				if (event.key.code == Keyboard::Left) {
 					userInput -= LookLeft;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::Up) {
+				if (event.key.code == Keyboard::Up) {
 					userInput -= LookUp;
 					break;
 				}
 
-				if (event.key.code == sf::Keyboard::Down) {
+				if (event.key.code == Keyboard::Down) {
 					userInput -= LookDown;
 					break;
 				}
@@ -190,13 +184,15 @@ int main() {
 		}
 
 		// Draw the background color
-		window->clear(sf::Color::Black);
+		window.clear(Color::Black);
 
 		// Draw here
-		window->draw(screen, &rayMarchingShader);
+		drawSphere(Glsl::Vec3(5, 0, 0), Glsl::Vec3(0, 0, 0), Glsl::Vec4(0, 1, 0, 1), 3);
+
+		window.draw(screen, &rayMarchingShader);
 
 		// End the frame and actually draw it
-		window->display();
+		window.display();
 
 		deltaTime = deltaClock.getElapsedTime().asSeconds();
 		deltaClock.restart();
@@ -246,46 +242,21 @@ int main() {
 		rayMarchingShader.setUniform("camPosition", position);
 		rayMarchingShader.setUniform("camRotation", rotation);
 
+		for (int i = 0; i < spheres.size(); i++) {
+
+			Sphere s = spheres.at(i);
+
+			rayMarchingShader.setUniform("spheres[" + std::to_string(i) + "].base.position", s.base.position);
+			rayMarchingShader.setUniform("spheres[" + std::to_string(i) + "].base.rotation", s.base.rotation);
+			rayMarchingShader.setUniform("spheres[" + std::to_string(i) + "].base.color",    s.base.color	);
+			rayMarchingShader.setUniform("spheres[" + std::to_string(i) + "].radius",        s.radius	    );
+		}
+
+		spheres.clear();
 	}
-
-	delete window;
 }
 
-sf::Vector3f rotateX(sf::Vector3f p, float theta) {
-	return sf::Vector3f(
-		p.x,
-		p.y * cos(theta) - p.z * sin(theta),
-		p.y * sin(theta) + p.z * cos(theta)
-	);
-}
-
-sf::Vector3f rotateY(sf::Vector3f p, float theta) {
-	return sf::Vector3f(
-		p.x * cos(theta) + p.z * sin(theta),
-		p.y,
-		-p.x * sin(theta) + p.z * cos(theta)
-	);
-}
-
-sf::Vector3f rotateZ(sf::Vector3f p, float theta) {
-	return sf::Vector3f(
-		p.x * cos(theta) - p.y * sin(theta),
-		p.x * sin(theta) + p.y * cos(theta),
-		p.z
-	);
-}
-
-sf::Vector3f rotateXYZ(sf::Vector3f p, sf::Vector3f rot) {
-	sf::Vector3f rotated = p;
-
-	rotated = rotateX(rotated, rot.x);
-	rotated = rotateY(rotated, rot.y);
-	rotated = rotateZ(rotated, rot.z);
-
-	return rotated;
-}
-
-sf::Vector3f normalize(sf::Vector3f p) {
+Vector3f normalize(sf::Vector3f p) {
 	float magnitude = sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
 
 	if (magnitude > 1) {
@@ -293,4 +264,16 @@ sf::Vector3f normalize(sf::Vector3f p) {
 	}
 
 	return p;
+}
+
+void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad) {
+	Sphere sphere;
+	sphere.base.position = pos;
+	sphere.base.rotation = rot;
+	sphere.base.color = col;
+	sphere.radius = rad;
+
+	spheres.push_back(sphere);
+
+	rayMarchingShader.setUniform("numSpheres", (int)spheres.size());
 }
