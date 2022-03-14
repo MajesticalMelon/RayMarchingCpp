@@ -144,6 +144,8 @@ SceneInfo SceneSDF(vec3 p) {
 
 float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 	float distTotal = 0.;
+
+    vec4 col;
     
     for (int i = 0; i < MAX_STEPS; i++)
     {   
@@ -157,8 +159,11 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         // Check if the ray has hit
         if (dist < TOLERANCE)
         {
-            dCol = scene.color;
-            return distTotal;
+
+            if (scene.color.w > 0.99) {
+                dCol *= scene.color;
+                return distTotal;
+            }
         }
         
         // Update travelled distance if no hit
@@ -196,7 +201,7 @@ vec4 getLight(vec3 p) {
     float dif = clamp(dot(n, l), 0., 1.);
 
     vec4 col = dif * SceneSDF(p).color;
-    col.w = 1.;
+    //col.w = 1.;
 
     return col;
 }
