@@ -74,6 +74,9 @@ struct Box {
 uniform Sphere spheres[10];
 uniform int numSpheres = 0;
 
+uniform Box boxes[10];
+uniform int numBoxes = 0;
+
 float sphereSDF(vec3 p, vec3 pos, vec3 rot, float r) {
     return length(rotateXYZ(p - pos, rot)) - r;
 }
@@ -125,6 +128,13 @@ SceneInfo SceneSDF(vec3 p) {
     for (int i = 0; i < numSpheres; i++) {
         shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
+
+        scene = CheckScene(scene, shape);
+    }
+
+    for (int i = 0; i < numBoxes; i++) {
+        shape.distToScene =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
+        shape.color = boxes[i].base.color;
 
         scene = CheckScene(scene, shape);
     }
