@@ -48,6 +48,8 @@ uniform vec3 camRotation = vec3(0);
 
 uniform float time = 0;
 
+// Used for checking and returning the distance to the scene
+// and the color at that point in a nice package
 struct SceneInfo {
     float distToScene;
     vec4 color;
@@ -72,10 +74,8 @@ struct Box {
 uniform Sphere spheres[10];
 uniform int numSpheres = 0;
 
-uniform Shape shapes[50];
-
-float sphereSDF(vec3 p, vec3 pos, float r) {
-    return length(p - pos) - r;
+float sphereSDF(vec3 p, vec3 pos, vec3 rot, float r) {
+    return length(rotateXYZ(p - pos, rot)) - r;
 }
 
 float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
@@ -96,11 +96,11 @@ SceneInfo SceneSDF(vec3 p) {
 
     SceneInfo scene;
 
-    scene.distToScene = p.y + 1;
+    scene.distToScene = p.y;
     scene.color = vec4(1, 1, 0, 1);
 
     Sphere sphere;
-    sphere.base.position = vec3(5, 0, 4);
+    sphere.base.position = vec3(5, 1, 4);
     sphere.base.rotation = vec3(0);
     sphere.base.color = vec4(1, 0, 0, 1);
     sphere.radius = 1.;
@@ -112,7 +112,7 @@ SceneInfo SceneSDF(vec3 p) {
     box.size = vec3(1, 1, 1);
 
     SceneInfo shape;
-    shape.distToScene = sphereSDF(p, sphere.base.position, sphere.radius);
+    shape.distToScene = sphereSDF(p, sphere.base.position, sphere.base.rotation, sphere.radius);
     shape.color = sphere.base.color;
 
     scene = CheckScene(scene, shape);
@@ -123,7 +123,7 @@ SceneInfo SceneSDF(vec3 p) {
     scene = CheckScene(scene, shape);
 
     for (int i = 0; i < numSpheres; i++) {
-        shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].radius);
+        shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
 
         scene = CheckScene(scene, shape);

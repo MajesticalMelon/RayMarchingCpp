@@ -37,8 +37,6 @@ enum Input {
 // Shape stuff
 std::vector<Sphere> spheres;
 
-Shader rayMarchingShader;
-
 int main() {
 	std::cout << "Creating Window" << std::endl;
 	RenderWindow window(VideoMode(800, 600), "Ray Marcher");
@@ -53,6 +51,7 @@ int main() {
 
 	// Ray marcher
 	std::cout << "Loading Marcher" << std::endl;
+	Shader rayMarchingShader;
 	rayMarchingShader.loadFromFile("Marcher.frag", Shader::Type::Fragment);
 
 	// Send initial position to shader
@@ -186,9 +185,10 @@ int main() {
 		// Draw the background color
 		window.clear(Color::Black);
 
-		// Draw here
-		drawSphere(Glsl::Vec3(5, 0, 0), Glsl::Vec3(0, 0, 0), Glsl::Vec4(0, 1, 0, 1), 3);
+		// Start drawing here (Gets redrawn every frame so positions could be modified)
+		drawSphere(Glsl::Vec3(5 * cos(gameClock.getElapsedTime().asSeconds()), 3, 5 * sin(gameClock.getElapsedTime().asSeconds())), Glsl::Vec3(0, 0, 0), Glsl::Vec4(0, 0, 1, 1), 3);
 
+		// End drawing here
 		window.draw(screen, &rayMarchingShader);
 
 		// End the frame and actually draw it
@@ -252,6 +252,8 @@ int main() {
 			rayMarchingShader.setUniform("spheres[" + std::to_string(i) + "].radius",        s.radius	    );
 		}
 
+		rayMarchingShader.setUniform("numSpheres", (int)spheres.size());
+
 		spheres.clear();
 	}
 }
@@ -274,6 +276,4 @@ void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad) {
 	sphere.radius = rad;
 
 	spheres.push_back(sphere);
-
-	rayMarchingShader.setUniform("numSpheres", (int)spheres.size());
 }
