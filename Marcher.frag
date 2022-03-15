@@ -4,7 +4,7 @@ uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
 const float MAX_DISTANCE = 30.;
-const float TOLERANCE = 0.001;
+const float TOLERANCE = 0.0001;
 const int MAX_STEPS = 1000;
 
 vec4 difCol = vec4(1., 1., 1., 1.);
@@ -102,28 +102,7 @@ SceneInfo SceneSDF(vec3 p) {
     scene.distToScene = p.y;
     scene.color = vec4(1, 1, 0, 1);
 
-    Sphere sphere;
-    sphere.base.position = vec3(5, 1, 4);
-    sphere.base.rotation = vec3(0);
-    sphere.base.color = vec4(1, 0, 0, 1);
-    sphere.radius = 1.;
-
-    Box box;
-    box.base.position = vec3 (0, 1, 6);
-    box.base.rotation = vec3(5, time, 0);
-    box.base.color = vec4(0, 1, 0, 1);
-    box.size = vec3(1, 1, 1);
-
     SceneInfo shape;
-    shape.distToScene = sphereSDF(p, sphere.base.position, sphere.base.rotation, sphere.radius);
-    shape.color = sphere.base.color;
-
-    scene = CheckScene(scene, shape);
-
-    shape.distToScene = boxSDF(p, box.base.position, box.base.rotation, box.size);
-    shape.color = box.base.color;
-
-    scene = CheckScene(scene, shape);
 
     for (int i = 0; i < numSpheres; i++) {
         shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
@@ -159,11 +138,8 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         // Check if the ray has hit
         if (dist < TOLERANCE)
         {
-
-            if (scene.color.w > 0.99) {
-                dCol *= scene.color;
-                return distTotal;
-            }
+            dCol = scene.color;
+            return distTotal;
         }
         
         // Update travelled distance if no hit
@@ -192,18 +168,24 @@ vec3 getNormal(vec3 p) {
     return normalize(n);
 }
 
-vec4 getLight(vec3 p) {
-    vec3 lightPos = vec3(-5, 2, -1);
+vec4 getLight(vec3 p, vec4 color) {
+    vec3 lightPos = vec3(0, 10, 0);
     vec3 l = normalize(lightPos - p);
 
     vec3 n = getNormal(p);
 
     float dif = clamp(dot(n, l), 0., 1.);
 
-    vec4 col = dif * SceneSDF(p).color;
-    //col.w = 1.;
+    vec4 col = vec4(0, 0, 0, 0);
 
-    return col;
+    float dist = RayMarch(p + n * TOLERANCE * 2, l, col);
+
+    if (dist < length(lightPos - p))
+    {
+        dif *= 0.5;
+    }
+
+    return color * dif;
 }
 
 void main() {
@@ -218,7 +200,7 @@ void main() {
 
     vec3 pos = camPosition + rd * dist;
 
-    vec4 col = getLight(pos);
+    vec4 col = getLight(pos, difCol);
 
 	gl_FragColor = col;
 }
