@@ -124,7 +124,7 @@ SceneInfo SceneSDF(vec3 p) {
 float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 	float distTotal = 0.;
 
-    vec4 col;
+    vec4 accCol = vec4(0.);
     
     for (int i = 0; i < MAX_STEPS; i++)
     {   
@@ -138,8 +138,17 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         // Check if the ray has hit
         if (dist < TOLERANCE)
         {
-            dCol = scene.color;
-            return distTotal;
+           
+            accCol.rgb += scene.color.rgb * scene.color.a * (1. - accCol.a);
+
+            accCol.a += scene.color.a * (1. - accCol.a);
+
+            if (accCol.a >= 1. - TOLERANCE) {
+                accCol.a = 1.;
+
+                dCol = accCol;
+                return distTotal;
+             }
         }
         
         // Update travelled distance if no hit
@@ -170,7 +179,7 @@ vec3 getNormal(vec3 p) {
 }
 
 vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(0, 10, 0);
+    vec3 lightPos = vec3(0., 10., 0.);
     vec3 l = normalize(lightPos - p);
 
     vec3 n = getNormal(p);
@@ -179,7 +188,7 @@ vec4 getLight(vec3 p, vec4 color) {
 
     // Just an empty variable for the sake of using the
     // RayMarch function
-    vec4 col = vec4(0, 0, 0, 0);
+    vec4 col = vec4(1.);
 
     float dist = RayMarch(p + n * TOLERANCE * 2, l, col);
 
@@ -188,7 +197,7 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= 0.5;
     }
 
-    return vec4(color.rgb * dif, 1.);
+    return vec4(color.rgb * col.rgb * dif, col.a * color.a);
 }
 
 void main() {
@@ -203,7 +212,7 @@ void main() {
 
     vec3 pos = camPosition + rd * dist;
 
-    vec4 col = getLight(pos, difCol);
+    //vec4 col = getLight(pos, difCol);
 
-	gl_FragColor = col;
+	gl_FragColor = difCol;
 }
