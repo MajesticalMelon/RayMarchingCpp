@@ -3,8 +3,8 @@
 uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
-const float MAX_DISTANCE = 30.;
-const float TOLERANCE = 0.0001;
+const float MAX_DISTANCE = 100.;
+const float TOLERANCE = 0.01;
 const int MAX_STEPS = 1000;
 
 vec4 difCol = vec4(1., 1., 1., 1.);
@@ -147,11 +147,12 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         
         if (distTotal > MAX_DISTANCE)
         {
-            break;
+            dCol = vec4(0.7, 0.9, 1., 1.);
+            return distTotal;
         }
     }
 
-    dCol = vec4(1.);
+    dCol = vec4(1, 0, 0, 1);
     return distTotal;
 }
 
@@ -176,6 +177,8 @@ vec4 getLight(vec3 p, vec4 color) {
 
     float dif = clamp(dot(n, l), 0., 1.);
 
+    // Just an empty variable for the sake of using the
+    // RayMarch function
     vec4 col = vec4(0, 0, 0, 0);
 
     float dist = RayMarch(p + n * TOLERANCE * 2, l, col);
@@ -185,7 +188,7 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= 0.5;
     }
 
-    return color * dif;
+    return vec4(color.rgb * dif, 1.);
 }
 
 void main() {

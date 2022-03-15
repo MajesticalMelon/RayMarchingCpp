@@ -120,6 +120,16 @@ int main() {
 					break;
 				}
 
+				if (event.key.code == Keyboard::Space && (userInput & Up) != Up) {
+					userInput += Up;
+					break;
+				}
+
+				if (event.key.code == Keyboard::LControl && (userInput & Down) != Down) {
+					userInput += Down;
+					break;
+				}
+
 				// Rotation
 				if (event.key.code == Keyboard::Right && (userInput & LookRight) != LookRight) {
 					userInput += LookRight;
@@ -163,6 +173,16 @@ int main() {
 
 				if (event.key.code == Keyboard::D) {
 					userInput -= Right;
+					break;
+				}
+
+				if (event.key.code == Keyboard::Space) {
+					userInput -= Up;
+					break;
+				}
+
+				if (event.key.code == Keyboard::LControl) {
+					userInput -= Down;
 					break;
 				}
 
@@ -238,6 +258,14 @@ int main() {
 			if ((userInput & Right) == Right) {
 				position += sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
 			}
+
+			/*if ((userInput & Up) == Up) {
+				position += sf::Vector3f(0, 1, 0) * deltaTime * walkScalar;
+			}
+
+			if ((userInput & Down) == Down) {
+				position -= sf::Vector3f(0, 1, 0) * deltaTime * walkScalar;
+			}*/
 
 			// Rotation
 			if ((userInput & LookRight) == LookRight) {
