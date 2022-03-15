@@ -3,9 +3,9 @@
 uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
-const float MAX_DISTANCE = 100.;
+const float MAX_DISTANCE = 1000.;
 const float TOLERANCE = 0.01;
-const int MAX_STEPS = 1000;
+const int MAX_STEPS = 10000;
 
 vec4 difCol = vec4(1., 1., 1., 1.);
 
@@ -143,6 +143,11 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 
             accCol.a += scene.color.a * (1. - accCol.a);
 
+            if (scene.color.a <= 1 - TOLERANCE) {
+                distTotal += 1.5 * TOLERANCE;
+                
+            }
+
             if (accCol.a >= 1. - TOLERANCE) {
                 accCol.a = 1.;
 
@@ -156,6 +161,7 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         
         if (distTotal > MAX_DISTANCE)
         {
+            // Color of sky
             dCol = vec4(0.7, 0.9, 1., 1.);
             return distTotal;
         }
@@ -179,7 +185,7 @@ vec3 getNormal(vec3 p) {
 }
 
 vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(0., 10., 0.);
+    vec3 lightPos = vec3(0., 20., 0.);
     vec3 l = normalize(lightPos - p);
 
     vec3 n = getNormal(p);
@@ -194,10 +200,10 @@ vec4 getLight(vec3 p, vec4 color) {
 
     if (dist < length(lightPos - p))
     {
-        dif *= 0.5;
+        dif *= 0.1;
     }
 
-    return vec4(color.rgb * col.rgb * dif, col.a * color.a);
+    return vec4(color.rgb * dif, color.a);
 }
 
 void main() {
@@ -212,7 +218,7 @@ void main() {
 
     vec3 pos = camPosition + rd * dist;
 
-    //vec4 col = getLight(pos, difCol);
+   vec4 col = getLight(pos, difCol);
 
-	gl_FragColor = difCol;
+	gl_FragColor = col * difCol;
 }
