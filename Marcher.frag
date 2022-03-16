@@ -54,6 +54,7 @@ uniform float time = 0;
 struct SceneInfo {
     float distToScene;
     vec4 color;
+    float metallic;
 };
 
 struct Shape {
@@ -91,6 +92,7 @@ SceneInfo CheckScene(SceneInfo scene, SceneInfo shape) {
     if (shape.distToScene < scene.distToScene) {
         scene.distToScene = shape.distToScene;
         scene.color = shape.color;
+        scene.metallic = shape.metallic;
     }
 
     return scene;
@@ -102,19 +104,17 @@ SceneInfo SceneSDF(vec3 p) {
 
     scene.distToScene = p.y;
     scene.color = vec4(1, 1, 0, 1);
+    scene.metallic = 0;
 
     SceneInfo shape;
 
     // "Sky box"
     shape.color = vec4(0.7, 0.9, 1., 1.);
 
-    // Top
-    shape.distToScene = -p.y + 60;
-    scene = CheckScene(scene, shape);
-
     for (int i = 0; i < numSpheres; i++) {
         shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
+        shape.metallic = 0.5;
 
         scene = CheckScene(scene, shape);
     }
@@ -122,6 +122,7 @@ SceneInfo SceneSDF(vec3 p) {
     for (int i = 0; i < numBoxes; i++) {
         shape.distToScene =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
         shape.color = boxes[i].base.color;
+        shape.metallic = 1.;
 
         scene = CheckScene(scene, shape);
     }
@@ -170,11 +171,12 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         if (distTotal > MAX_DISTANCE)
         {
             // Color of sky
-            dCol = vec4(0.7, 0.9, 1., 1.);
+            
             break;
         }
     }
 
+    dCol = vec4(0.7, 0.9, 1., 1.);
     return distTotal;
 }
 
@@ -211,6 +213,10 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= 0.5;
     }
 
+    if (col.a < 1 - TOLERANCE) {
+        return vec4(col.rgb * dif, 1.);
+    }
+
     return vec4(color.rgb * dif, color.a);
 }
 
@@ -227,6 +233,18 @@ void main() {
     vec3 pos = camPosition + rd * dist;
 
     vec4 col = getLight(pos, difCol);
+
+
+    // Reflection loop - Replace RayMarch() with a special reflection march;
+
+//    if (SceneSDF(pos).metallic > TOLERANCE) {
+//        for (int i = 0; i < 0; i++) {
+//            vec3 n = getNormal(pos);
+//            rd = reflect(rd, n);
+//            pos += rd * RayMarch(pos + n * TOLERANCE, rd, difCol);
+//            col = getLight(pos, difCol);
+//        }
+//    }
 
 	gl_FragColor = col * difCol;
 }
