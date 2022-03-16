@@ -194,6 +194,7 @@ vec3 getNormal(vec3 p) {
 vec4 getLight(vec3 p, vec4 color) {
     vec3 lightPos = vec3(p.x, 20., p.z);
     vec3 l = normalize(lightPos - p);
+    l = rotateX(l, cos(time));
 
     vec3 n = getNormal(p);
 
