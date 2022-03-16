@@ -50,7 +50,7 @@ int main() {
 	RenderWindow window(VideoMode(800, 600), "Ray Marcher");
 
 	// Inputs
-	short userInput = Down;
+	short userInput = None;
 
 	// Camera
 	Vector3f position(0, 1, 0);
@@ -214,17 +214,17 @@ int main() {
 		window.clear(Color::Black);
 
 		// Start drawing here (Gets redrawn every frame so positions could be modified)
-		/*drawSphere(
+		drawSphere(
 			Glsl::Vec3(5 * cos(gameClock.getElapsedTime().asSeconds()), 3, 5 * sin(gameClock.getElapsedTime().asSeconds())), 
 			Glsl::Vec3(0, 0, 0), 
-			Glsl::Vec4(0, 0, 1, 1), 
+			Glsl::Vec4(1, 0, 0, 1), 
 			3
-		);*/
+		);
 
 		drawBox(
 			Glsl::Vec3(-2, 3, 0),
 			Glsl::Vec3(gameClock.getElapsedTime().asSeconds(), 1, -gameClock.getElapsedTime().asSeconds()),
-			Glsl::Vec4(0, 1, 0.7, 0.2),
+			Glsl::Vec4(0, 1, 0.7, 0.5),
 			Glsl::Vec3(1, 3, 0.01)
 		);
 
@@ -241,6 +241,10 @@ int main() {
 
 		// Check userInput
 		if ((userInput |  None) !=  None) {
+
+			// Temporarily zero look.y so movement is along a plane
+			float tempY = look.y;
+			look.y = 0;
 
 			// Movement
 			if ((userInput &  Forward) ==  Forward) {
@@ -259,13 +263,16 @@ int main() {
 				position += sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
 			}
 
-			/*if ((userInput & Up) == Up) {
+			if ((userInput & Up) == Up) {
 				position += sf::Vector3f(0, 1, 0) * deltaTime * walkScalar;
 			}
 
 			if ((userInput & Down) == Down) {
 				position -= sf::Vector3f(0, 1, 0) * deltaTime * walkScalar;
-			}*/
+			}
+
+			// Reassign look
+			look.y = tempY;
 
 			// Rotation
 			if ((userInput & LookRight) == LookRight) {
