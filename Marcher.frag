@@ -51,16 +51,13 @@ uniform float time = 0;
 
 // Used for checking and returning the distance to the scene
 // and the color at that point in a nice package
-struct SceneInfo {
-    float distToScene;
-    vec4 color;
-    float metallic;
-};
 
 struct Shape {
     vec3 position;
     vec3 rotation;
     vec4 color;
+    float signedDistance;
+    float metallic;
 };
 
 struct Sphere {
@@ -88,28 +85,28 @@ float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
     return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.);
 }
 
-SceneInfo CheckScene(SceneInfo scene, SceneInfo shape) {
-    if (shape.distToScene < scene.distToScene) {
-        scene.distToScene = shape.distToScene;
-        scene.color = shape.color;
-        scene.metallic = shape.metallic;
+Shape CheckScene(Shape scene, Shape check) {
+    if (check.signedDistance < scene.signedDistance) {
+        scene.signedDistance = check.signedDistance;
+        scene.color = check.color;
+        scene.metallic = check.metallic;
     }
 
     return scene;
 }
 
-SceneInfo SceneSDF(vec3 p) {
+Shape SceneSDF(vec3 p) {
 
-    SceneInfo scene;
+    Shape scene;
 
-    scene.distToScene = p.y;
+    scene.signedDistance = p.y;
     scene.color = vec4(1, 1, 0, 1);
     scene.metallic = 0;
 
-    SceneInfo shape;
+    Shape shape;
 
     for (int i = 0; i < numSpheres; i++) {
-        shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
+        shape.signedDistance =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
         shape.metallic = 0.5;
 
@@ -117,7 +114,7 @@ SceneInfo SceneSDF(vec3 p) {
     }
 
     for (int i = 0; i < numBoxes; i++) {
-        shape.distToScene =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
+        shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
         shape.color = boxes[i].base.color;
         shape.metallic = 1.;
 
@@ -138,8 +135,8 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         vec3 p = ro + rd * distTotal;
         
         // Get distance to the scene
-        SceneInfo scene = SceneSDF(p);
-        float dist = scene.distToScene;
+        Shape scene = SceneSDF(p);
+        float dist = scene.signedDistance;
 
         // Check if the ray has hit
         if (dist < TOLERANCE)
@@ -177,13 +174,13 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 }
 
 vec3 getNormal(vec3 p) {
-    float dist = SceneSDF(p).distToScene;
+    float dist = SceneSDF(p).signedDistance;
     vec2 e = vec2(TOLERANCE, 0);
 
     vec3 n = dist - vec3(
-        SceneSDF(p-e.xyy).distToScene,
-        SceneSDF(p-e.yxy).distToScene,
-        SceneSDF(p-e.yyx).distToScene
+        SceneSDF(p-e.xyy).signedDistance,
+        SceneSDF(p-e.yxy).signedDistance,
+        SceneSDF(p-e.yyx).signedDistance
     );
 
     return normalize(n);
