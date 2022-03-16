@@ -108,9 +108,6 @@ SceneInfo SceneSDF(vec3 p) {
 
     SceneInfo shape;
 
-    // "Sky box"
-    shape.color = vec4(0.7, 0.9, 1., 1.);
-
     for (int i = 0; i < numSpheres; i++) {
         shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
@@ -153,7 +150,7 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
             accCol.a += scene.color.a * (1. - accCol.a);
 
             if (scene.color.a <= 1 - TOLERANCE) {
-                distTotal += 1.5 * TOLERANCE;
+                distTotal += TOLERANCE;
                 
             }
 
@@ -161,12 +158,12 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
                 accCol.a = 1.;
 
                 dCol = accCol;
-                break;
+                return distTotal;
              }
         }
         
         // Update travelled distance if no hit
-        distTotal += dist;
+        distTotal += abs(dist);
         
         if (distTotal > MAX_DISTANCE)
         {

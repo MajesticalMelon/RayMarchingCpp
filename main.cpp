@@ -223,7 +223,7 @@ int main() {
 
 		drawBox(
 			Glsl::Vec3(-2, 3, 0),
-			Glsl::Vec3(gameClock.getElapsedTime().asSeconds(), 1, -gameClock.getElapsedTime().asSeconds()),
+			Glsl::Vec3(3, 1, 0),
 			Glsl::Vec4(0, 1, 0.7, 0.5),
 			Glsl::Vec3(1, 3, 0.01)
 		);
