@@ -168,12 +168,11 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         if (distTotal > MAX_DISTANCE)
         {
             // Color of sky
-            
+            dCol = vec4(0.7, 0.9, 1., 1.);
             break;
         }
     }
 
-    dCol = vec4(0.7, 0.9, 1., 1.);
     return distTotal;
 }
 
@@ -208,10 +207,6 @@ vec4 getLight(vec3 p, vec4 color) {
     if (dist < length(lightPos - p))
     {
         dif *= 0.5;
-    }
-
-    if (col.a < 1 - TOLERANCE) {
-        return vec4(col.rgb * dif, 1.);
     }
 
     return vec4(color.rgb * dif, color.a);
