@@ -222,12 +222,12 @@ int main() {
 			0.2
 		);
 
-		/*drawSphere(
+		drawSphere(
 			Glsl::Vec3(0, 3, 5),
 			Glsl::Vec3(0, 0, 0),
 			Glsl::Vec4(1, 0, 0, 1),
 			2
-		);*/
+		);
 
 		drawBox(
 			Glsl::Vec3(-2, 3, 0),

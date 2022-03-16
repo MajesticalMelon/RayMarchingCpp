@@ -135,32 +135,34 @@ Shape SceneSDF(vec3 p) {
     scene.metallic = 0;
 
     Shape shape;
+    Shape sphere;
 
     // Sphere drawing
     for (int i = 0; i < numSpheres; i++) {
+        shape = spheres[i].base;
         shape.signedDistance =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
-        shape.color = spheres[i].base.color;
-        shape.metallic = 0.5;
 
-        //scene = CheckScene(scene, spheres[i].base);
+        if (i == 0) {
+            sphere = shape;
+        } else {
+            scene = CheckScene(scene, shape);
+        }
     }
 
-    Shape sphere = shape;
+    Shape box;
 
     // Box drawing
     for (int i = 0; i < numBoxes; i++) {
+        shape = boxes[i].base;
         shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
-        shape.color = boxes[i].base.color;
-        shape.metallic = 1.;
-
-        //scene = CheckScene(scene, boxes[i].base);
+        if (i == 0) {
+            box = shape;
+        } else {
+            scene = CheckScene(scene, shape);
+        }
     }
 
-    Shape box = shape;
-
-    //scene = CheckScene(scene, combine(sphere, box));
-    scene = CheckScene(scene, spheres[0].base);
-    scene = CheckScene(scene, spheres[1].base);
+    scene = CheckScene(scene, combine(sphere, box));
 
 	return scene;
 }
