@@ -131,7 +131,7 @@ Shape SceneSDF(vec3 p) {
     Shape scene;
 
     scene.signedDistance = p.y;
-    scene.color = vec4(1, 1, 0, 1);
+    scene.color = vec4(1, 1, 1, 1);
     scene.metallic = 0;
 
     Shape shape;
@@ -142,7 +142,7 @@ Shape SceneSDF(vec3 p) {
         shape.color = spheres[i].base.color;
         shape.metallic = 0.5;
 
-        //scene = CheckScene(scene, shape);
+        //scene = CheckScene(scene, spheres[i].base);
     }
 
     Shape sphere = shape;
@@ -152,11 +152,15 @@ Shape SceneSDF(vec3 p) {
         shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
         shape.color = boxes[i].base.color;
         shape.metallic = 1.;
+
+        //scene = CheckScene(scene, boxes[i].base);
     }
 
     Shape box = shape;
 
-    scene = CheckScene(scene, combine(sphere, box));
+    //scene = CheckScene(scene, combine(sphere, box));
+    scene = CheckScene(scene, spheres[0].base);
+    scene = CheckScene(scene, spheres[1].base);
 
 	return scene;
 }
@@ -185,8 +189,8 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
             accCol.a += scene.color.a * (1. - accCol.a);
 
             if (scene.color.a <= 1 - TOLERANCE) {
+                // Add more to the distance to get it through the object
                 distTotal += TOLERANCE;
-                
             }
 
             if (accCol.a >= 1. - TOLERANCE) {
@@ -204,10 +208,66 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         {
             // Color of sky
             dCol = vec4(0.7, 0.9, 1., 1.);
+            return distTotal;
+        }
+    }
+
+    //accCol.a = 1.;
+    dCol = accCol;
+    return distTotal;
+}
+
+float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTransparentObject) {
+	float distTotal = 0.;
+
+    vec4 accCol = vec4(0.);
+
+    hitTransparentObject = false;
+    
+    for (int i = 0; i < MAX_STEPS; i++)
+    {   
+        // March away from origin
+        vec3 p = ro + rd * distTotal;
+        
+        // Get distance to the scene
+        Shape scene = SceneSDF(p);
+        float dist = scene.signedDistance;
+
+        // Check if the ray has hit
+        if (dist < TOLERANCE)
+        {           
+            accCol.rgb += scene.color.rgb * scene.color.a * (1. - accCol.a);
+
+            accCol.a += scene.color.a * (1. - accCol.a);
+
+            if (scene.color.a <= 1 - TOLERANCE) {
+                // Add more to the distance to get it through the object
+                distTotal += abs(dist) * TOLERANCE;
+
+                hitTransparentObject = true;
+            } else {
+                hitTransparentObject = false;
+            }
+
+            if (accCol.a >= 1. - TOLERANCE) {
+                accCol.a = 1.;
+
+                dCol = accCol;
+                return distTotal;
+             }
+        }
+        
+        // Update travelled distance if no hit
+        distTotal += abs(dist);
+        
+        if (distTotal > length(lightPos - ro))
+        {
             break;
         }
     }
 
+    //accCol.a = 1;
+    dCol = accCol;
     return distTotal;
 }
 
@@ -231,16 +291,16 @@ vec4 getLight(vec3 p, vec4 color) {
 
     vec3 n = getNormal(p);
 
-    float dif = smoothstep(0., 1., dot(n, l));
+    vec3 dif = vec3(smoothstep(0., 1., dot(n, l)));
 
-    // Just an empty variable for the sake of using the
-    // RayMarch function
-    vec4 col = vec4(1.);
+    vec4 col = vec4(0., 0., 0., 1.);
+    bool hitTransparentObject;
 
-    float dist = RayMarch(p + n * TOLERANCE * 2, l, col);
+    float dist = lightMarch(p + n * TOLERANCE * 2, l, lightPos, col, hitTransparentObject);
 
-    if (dist < length(lightPos - p))
-    {
+    if (hitTransparentObject) {
+        dif *= col.rgb * 0.5;
+    } else if (dist < length(lightPos - p) && !hitTransparentObject) {
         dif *= 0.5;
     }
 
