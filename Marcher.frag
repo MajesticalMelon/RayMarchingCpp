@@ -3,9 +3,10 @@
 uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
-const float MAX_DISTANCE = 1000.;
+const float MAX_DISTANCE = 500.;
 const float TOLERANCE = 0.01;
 const int MAX_STEPS = 10000;
+const float PI = 3.14159265359;
 
 vec4 difCol = vec4(1., 1., 1., 1.);
 
@@ -104,6 +105,12 @@ SceneInfo SceneSDF(vec3 p) {
 
     SceneInfo shape;
 
+    // Upper plane
+    shape.distToScene = -p.y + 60;
+    shape.color = vec4(0.7, 0.9, 1., 1.);
+
+    scene = CheckScene(scene, shape);
+
     for (int i = 0; i < numSpheres; i++) {
         shape.distToScene =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
@@ -167,13 +174,13 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         }
     }
 
-    dCol = vec4(1, 0, 0, 1);
+    dCol = vec4(0., 0., 0., 1.);
     return distTotal;
 }
 
 vec3 getNormal(vec3 p) {
     float dist = SceneSDF(p).distToScene;
-    vec2 e = vec2(.01, 0);
+    vec2 e = vec2(TOLERANCE, 0);
 
     vec3 n = dist - vec3(
         SceneSDF(p-e.xyy).distToScene,
@@ -185,12 +192,12 @@ vec3 getNormal(vec3 p) {
 }
 
 vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(0., 20., 0.);
+    vec3 lightPos = vec3(p.x, 20., p.z);
     vec3 l = normalize(lightPos - p);
 
     vec3 n = getNormal(p);
 
-    float dif = clamp(dot(n, l), 0., 1.);
+    float dif = smoothstep(0., 1., dot(n, l));
 
     // Just an empty variable for the sake of using the
     // RayMarch function
@@ -200,7 +207,7 @@ vec4 getLight(vec3 p, vec4 color) {
 
     if (dist < length(lightPos - p))
     {
-        dif *= 0.1;
+        dif *= 0.5;
     }
 
     return vec4(color.rgb * dif, color.a);
@@ -209,7 +216,7 @@ vec4 getLight(vec3 p, vec4 color) {
 void main() {
     vec2 dim = vec2(800, 600);
 
-    vec2 uv = (vec2(gl_FragCoord.xy) / vec2(800, 600)) - 0.5;
+    vec2 uv = (vec2(gl_FragCoord.xy) / dim) - 0.5;
 
     vec3 rd = normalize(vec3(uv.x, uv.y, 1));
     rd = rotateXYZ(rd, camRotation);
@@ -218,7 +225,7 @@ void main() {
 
     vec3 pos = camPosition + rd * dist;
 
-   vec4 col = getLight(pos, difCol);
+    vec4 col = getLight(pos, difCol);
 
 	gl_FragColor = col * difCol;
 }
