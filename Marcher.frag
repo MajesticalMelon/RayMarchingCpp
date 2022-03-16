@@ -8,7 +8,7 @@ const float TOLERANCE = 0.01;
 const int MAX_STEPS = 10000;
 const float PI = 3.14159265359;
 
-vec4 difCol = vec4(1., 1., 1., 1.);
+vec4 difCol = vec4(0., 0., 0., 1.);
 
 vec3 rotateX(vec3 p, float theta) {
     return vec3(
@@ -105,10 +105,11 @@ SceneInfo SceneSDF(vec3 p) {
 
     SceneInfo shape;
 
-    // Upper plane
-    shape.distToScene = -p.y + 60;
+    // "Sky box"
     shape.color = vec4(0.7, 0.9, 1., 1.);
 
+    // Top
+    shape.distToScene = -p.y + 60;
     scene = CheckScene(scene, shape);
 
     for (int i = 0; i < numSpheres; i++) {
@@ -159,7 +160,7 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
                 accCol.a = 1.;
 
                 dCol = accCol;
-                return distTotal;
+                break;
              }
         }
         
@@ -170,11 +171,10 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         {
             // Color of sky
             dCol = vec4(0.7, 0.9, 1., 1.);
-            return distTotal;
+            break;
         }
     }
 
-    dCol = vec4(0., 0., 0., 1.);
     return distTotal;
 }
 
