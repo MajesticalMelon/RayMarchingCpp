@@ -57,6 +57,8 @@ struct Shape {
     vec3 rotation;
     vec4 color;
     float signedDistance;
+
+    // material properties
     float metallic;
 };
 
@@ -76,6 +78,7 @@ uniform int numSpheres = 0;
 uniform Box boxes[10];
 uniform int numBoxes = 0;
 
+// Signed Distance Fields
 float sphereSDF(vec3 p, vec3 pos, vec3 rot, float r) {
     return length(rotateXYZ(p - pos, rot)) - r;
 }
@@ -85,14 +88,28 @@ float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
     return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.);
 }
 
-Shape CheckScene(Shape scene, Shape check) {
-    if (check.signedDistance < scene.signedDistance) {
-        scene.signedDistance = check.signedDistance;
-        scene.color = check.color;
-        scene.metallic = check.metallic;
-    }
+// Shape operations
+Shape combine(Shape s1, Shape s2) {
+    return s1.signedDistance < s2.signedDistance ? s1 : s2;
+}
 
-    return scene;
+Shape intersect(Shape s1, Shape s2) {
+    Shape returned = s1.signedDistance > s2.signedDistance ? s1 : s2;
+    return returned;
+}
+
+Shape subtract(Shape s1, Shape s2) {
+    Shape negS1 = s1;
+    negS1.signedDistance = -s1.signedDistance;
+
+    Shape returned = negS1.signedDistance > s2.signedDistance ? negS1 : s2;
+
+    return returned;
+}
+
+// Compares two objects in the scene
+Shape CheckScene(Shape scene, Shape check) {
+    return check.signedDistance < scene.signedDistance ? check : scene;
 }
 
 Shape SceneSDF(vec3 p) {
@@ -105,6 +122,7 @@ Shape SceneSDF(vec3 p) {
 
     Shape shape;
 
+    // Sphere drawing
     for (int i = 0; i < numSpheres; i++) {
         shape.signedDistance =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
         shape.color = spheres[i].base.color;
@@ -113,13 +131,16 @@ Shape SceneSDF(vec3 p) {
         scene = CheckScene(scene, shape);
     }
 
+    // Box drawing
     for (int i = 0; i < numBoxes; i++) {
         shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
         shape.color = boxes[i].base.color;
         shape.metallic = 1.;
-
-        scene = CheckScene(scene, shape);
     }
+
+    //Shape sub = subtract(spheres[0].base, boxes[0].base);
+
+    scene = CheckScene(scene, shape);
 
 	return scene;
 }

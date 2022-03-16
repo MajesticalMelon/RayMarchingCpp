@@ -215,7 +215,7 @@ int main() {
 
 		// Start drawing here (Gets redrawn every frame so positions could be modified)
 		drawSphere(
-			Glsl::Vec3(5 * cos(gameClock.getElapsedTime().asSeconds()), 3, 5 * sin(gameClock.getElapsedTime().asSeconds())), 
+			Glsl::Vec3(5, 3, 0), 
 			Glsl::Vec3(0, 0, 0), 
 			Glsl::Vec4(1, 0, 0, 1), 
 			3
@@ -224,8 +224,8 @@ int main() {
 		drawBox(
 			Glsl::Vec3(-2, 3, 0),
 			Glsl::Vec3(3, 1, 0),
-			Glsl::Vec4(0, 1, 0.7, 0.1),
-			Glsl::Vec3(1, 3, 0.001)
+			Glsl::Vec4(0, 1, 0.7, 1),
+			Glsl::Vec3(1, 3, 0.1)
 		);
 
 		// End drawing here
