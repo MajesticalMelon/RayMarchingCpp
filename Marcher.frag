@@ -78,6 +78,17 @@ uniform int numSpheres = 0;
 uniform Box boxes[10];
 uniform int numBoxes = 0;
 
+// Copied from https://www.shadertoy.com/view/Ml3Gz8
+float smoothMin(float a, float b, float k) {
+    float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
+    return mix(a, b, h) - k*h*(1.0-h);
+}
+
+vec4 smoothColor(float d1, float d2, vec4 a, vec4 b, float k) {
+    float h = clamp(0.5 + 0.5*(d2 - d1)/k, 0.0, 1.0);
+    return mix(b, a, h) - k*h*(1.0-h);
+}
+
 // Signed Distance Fields
 float sphereSDF(vec3 p, vec3 pos, vec3 rot, float r) {
     return length(rotateXYZ(p - pos, rot)) - r;
@@ -90,7 +101,10 @@ float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
 
 // Shape operations
 Shape combine(Shape s1, Shape s2) {
-    return s1.signedDistance < s2.signedDistance ? s1 : s2;
+    Shape returned = s1.signedDistance < s2.signedDistance ? s1 : s2;
+    returned.signedDistance = smoothMin(s1.signedDistance, s2.signedDistance, 0.2);
+    returned.color = smoothColor(s1.signedDistance, s2.signedDistance, s1.color, s2.color, 0.2);
+    return returned;
 }
 
 Shape intersect(Shape s1, Shape s2) {
@@ -128,8 +142,10 @@ Shape SceneSDF(vec3 p) {
         shape.color = spheres[i].base.color;
         shape.metallic = 0.5;
 
-        scene = CheckScene(scene, shape);
+        //scene = CheckScene(scene, shape);
     }
+
+    Shape sphere = shape;
 
     // Box drawing
     for (int i = 0; i < numBoxes; i++) {
@@ -138,13 +154,14 @@ Shape SceneSDF(vec3 p) {
         shape.metallic = 1.;
     }
 
-    //Shape sub = subtract(spheres[0].base, boxes[0].base);
+    Shape box = shape;
 
-    scene = CheckScene(scene, shape);
+    scene = CheckScene(scene, combine(sphere, box));
 
 	return scene;
 }
 
+// Used for traversing through the scene until a solid object is hit
 float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 	float distTotal = 0.;
 
@@ -227,7 +244,7 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= 0.5;
     }
 
-    return vec4(color.rgb * dif, color.a);
+    return vec4(color.rgb * dif, 1.);
 }
 
 void main() {
