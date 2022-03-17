@@ -23,6 +23,9 @@ namespace rm {
         // Shape type and index
         int index;
         int type;
+
+        void setType(ShapeType t);
+        void setOperation(Operation t, RMShape* opd);
     public:
         RMShape();
 
@@ -33,7 +36,9 @@ namespace rm {
         void setColor(Vec4 col);
         void setParam1(Vec3 p1);
         void setParam2(Vec3 p2);
-        void setType(ShapeType t);
+        void setVisible(bool visible);
+
+        void combine(RMShape* opd);
 
         Vec3 getPosition();
         Vec3 getRotation();
@@ -41,10 +46,11 @@ namespace rm {
         Vec3 getParam1();
         Vec3 getParam2();
         rm::ShapeType getType();
+        int getIndex();
 
-        static std::vector<RMShape> shapes;
+        static std::vector<RMShape*> shapes;
 
-        static RMShape& createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r);
-        static RMShape& createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size);
+        static RMShape* createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r);
+        static RMShape* createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size);
     };
 }

@@ -27,11 +27,9 @@
     <None Include="Marcher.frag" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Box.h" />
     <ClInclude Include="RMEnums.h" />
     <ClInclude Include="Rotations.h" />
     <ClInclude Include="RMShape.h" />
-    <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

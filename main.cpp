@@ -8,8 +8,6 @@
 #include "RMEnums.h"
 #include "RMShape.h"
 #include "Rotations.h"
-#include "Sphere.h"
-#include "Box.h"
 
 using namespace sf;
 
@@ -19,18 +17,6 @@ Vector3f rotateZ(Vector3f p, float theta);
 Vector3f rotateXYZ(Vector3f p, Vector3f rot);
 
 Vector3f normalize(Vector3f p);
-
-void sendShapes(Shader& shader);
-
-void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad);
-void drawSphere(Sphere& sphere);
-
-void drawBox(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, Glsl::Vec3 size);
-void drawBox(Box& box);
-
-// Shape stuff
-std::vector<Sphere> spheres;
-std::vector<Box> boxes;
 
 int main() {
 	std::cout << "Creating Window" << std::endl;
@@ -71,12 +57,28 @@ int main() {
 	Event event;
 
 	// Redoing sphere stuff
-	rm::RMShape sphere1 = rm::RMShape::createSphere(
-		Glsl::Vec3(-1.5 + cos(0.5 * gameClock.getElapsedTime().asSeconds()), 3, 0),
+	rm::RMShape* sphere1 = rm::RMShape::createSphere(
+		Glsl::Vec3(0, 0, 0),
 		Glsl::Vec3(0, 0, 0),
 		Glsl::Vec4(cos(5 * gameClock.getElapsedTime().asSeconds()), 0, sin(2 * gameClock.getElapsedTime().asSeconds()), 0.05),
 		0.2
 	);
+
+	rm::RMShape* box1 = rm::RMShape::createBox(
+		Glsl::Vec3(-2, 3, 0),
+		Glsl::Vec3(3, 1, 0),
+		Glsl::Vec4(0, 1, 0.7, 0.1),
+		Glsl::Vec3(1, 3, 0.01)
+	);
+
+	rm::RMShape* sphere2 = rm::RMShape::createSphere(
+		Glsl::Vec3(0, 3, 5),
+		Glsl::Vec3(0, 0, 0),
+		Glsl::Vec4(1, 0, 0, 1),
+		2
+	);
+
+	sphere1->combine(box1);
 
 	while (window.isOpen()) {
 		// Rotate the user's look vector
@@ -88,7 +90,7 @@ int main() {
 			}
 
 			if (event.type == Event::Resized) {
-				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f(window.getSize().x, window.getSize().y));
+				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
 				screen.setSize(sf::Vector2f(window.getSize().x, window.getSize().y));
 			}
 
@@ -215,29 +217,9 @@ int main() {
 		window.clear(Color::Blue);
 
 		// Start drawing here (Gets redrawn every frame so positions could be modified)
-		
-		sphere1.draw(&rayMarchingShader);
+		sphere1->draw(&rayMarchingShader);
 
-		/*drawSphere(
-			Glsl::Vec3(-1.5 + cos(0.5 * gameClock.getElapsedTime().asSeconds()), 3, 0),
-			Glsl::Vec3(0, 0, 0), 
-			Glsl::Vec4(cos(5 * gameClock.getElapsedTime().asSeconds()), 0, sin(2 * gameClock.getElapsedTime().asSeconds()), 0.05),
-			0.2
-		);
-
-		drawSphere(
-			Glsl::Vec3(0, 3, 5),
-			Glsl::Vec3(0, 0, 0),
-			Glsl::Vec4(1, 0, 0, 1),
-			2
-		);
-
-		drawBox(
-			Glsl::Vec3(-2, 3, 0),
-			Glsl::Vec3(3, 1, 0),
-			Glsl::Vec4(0, 1, 0.7, 0.1),
-			Glsl::Vec3(1, 3, 0.01)
-		);*/
+		sphere2->draw(&rayMarchingShader);
 
 		// End drawing here
 		window.draw(screen, &rayMarchingShader);
@@ -249,6 +231,8 @@ int main() {
 		deltaClock.restart();
 
 		// Update here
+
+		sphere1->setPosition(Glsl::Vec3(-1.5 + cos(0.5 * gameClock.getElapsedTime().asSeconds()), 3, 0));
 
 		// Check userInput
 		if ((userInput | rm::None) != rm::None) {
@@ -307,10 +291,10 @@ int main() {
 
 		rayMarchingShader.setUniform("camPosition", position);
 		rayMarchingShader.setUniform("camRotation", rotation);
+	}
 
-		rm::RMShape::shapes.clear();
-
-		//sendShapes(rayMarchingShader);
+	for (rm::RMShape* s : rm::RMShape::shapes) {
+		delete s;
 	}
 }
 
@@ -323,61 +307,3 @@ Vector3f normalize(sf::Vector3f p) {
 
 	return p;
 }
-
-//void sendShapes(Shader &shader) {
-//	for (int i = 0; i < spheres.size(); i++) {
-//
-//		Sphere s = spheres.at(i);
-//
-//		shader.setUniform("spheres[" + std::to_string(i) + "].base.position", s.base.getPosition());
-//		shader.setUniform("spheres[" + std::to_string(i) + "].base.rotation", s.base.getRotation());
-//		shader.setUniform("spheres[" + std::to_string(i) + "].base.color", s.base.getColor());
-//		shader.setUniform("spheres[" + std::to_string(i) + "].radius", s.base.getParam1().x);
-//	}
-//
-//	shader.setUniform("numSpheres", (int)spheres.size());
-//
-//	spheres.clear();
-//
-//	for (int i = 0; i < boxes.size(); i++) {
-//
-//		Box b = boxes.at(i);
-//
-//		shader.setUniform("boxes[" + std::to_string(i) + "].base.position", b.base.getPosition());
-//		shader.setUniform("boxes[" + std::to_string(i) + "].base.rotation", b.base.getRotation());
-//		shader.setUniform("boxes[" + std::to_string(i) + "].base.color", b.base.getColor());
-//		shader.setUniform("boxes[" + std::to_string(i) + "].size", b.base.getParam1());
-//	}
-//
-//	shader.setUniform("numBoxes", (int)boxes.size());
-//
-//	boxes.clear();
-//}
-//
-//void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad) {
-//	Sphere sphere;
-//	sphere.base.setPosition(pos);
-//	sphere.base.rotation = rot;
-//	sphere.base.color = col;
-//	sphere.radius = rad;
-//
-//	spheres.push_back(sphere);
-//}
-//
-//void drawSphere(Sphere &sphere) {
-//	spheres.push_back(sphere);
-//}
-//
-//void drawBox(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, Glsl::Vec3 size) {
-//	Box box;
-//	box.base.position = pos;
-//	box.base.rotation = rot;
-//	box.base.color = col;
-//	box.size = size;
-//
-//	boxes.push_back(box);
-//}
-//
-//void drawBox(Box& box) {
-//	boxes.push_back(box);
-//}

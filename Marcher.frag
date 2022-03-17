@@ -8,6 +8,15 @@ const float TOLERANCE = 0.001;
 const int MAX_STEPS = 10000;
 const float PI = 3.14159265359;
 
+// Shape types
+const int SPHERE = 1;
+const int BOX = 2;
+
+// SDF Ops
+const int UNION = 1;
+const int INTERSECTION = 2;
+const int SUBTRACT = 3;
+
 vec4 difCol = vec4(0., 0., 0., 1.);
 
 vec3 rotateX(vec3 p, float theta) {
@@ -96,11 +105,6 @@ float smoothMin(float a, float b, float k) {
     return mix(a, b, h) - k*h*(1.0-h);
 }
 
-float smoothMax(float a, float b, float k) {
-    float h = clamp(0.5 + 0.5*(a+b)/k, 0.0, 1.0);
-    return mix(a, b, h) - k*h*(1.0-h);
-}
-
 vec4 smoothColor(float d1, float d2, vec4 a, vec4 b, float k) {
     float h = clamp(0.5 + 0.5*(d2 - d1)/k, 0.0, 1.0);
     return mix(b, a, h) - k*h*(1.0-h);
@@ -121,11 +125,13 @@ Shape combine(Shape s1, Shape s2) {
     Shape returned = s1.signedDistance < s2.signedDistance ? s1 : s2;
     returned.signedDistance = smoothMin(s1.signedDistance, s2.signedDistance, 0.2);
     returned.color = smoothColor(s1.signedDistance, s2.signedDistance, s1.color, s2.color, 0.2);
+    returned.checkShape = true;
     return returned;
 }
 
 Shape intersection(Shape s1, Shape s2) {
     Shape returned = s1.signedDistance > s2.signedDistance ? s1 : s2;
+    returned.checkShape = true;
     return returned;
 }
 
@@ -134,13 +140,52 @@ Shape subtract(Shape s1, Shape s2) {
     negS1.signedDistance = -s1.signedDistance;
 
     Shape returned = negS1.signedDistance > s2.signedDistance ? negS1 : s2;
-
+    returned.checkShape = true;
     return returned;
 }
 
 // Compares two objects in the scene
 Shape CheckScene(Shape scene, Shape check) {
     return check.signedDistance < scene.signedDistance ? check : scene;
+}
+
+float assignSDF(vec3 p, Shape s) {
+    float sdf = 0;
+
+    // Sphere
+    if (s.type == SPHERE) {
+        return sphereSDF(
+            p,
+            s.position,
+            s.rotation,
+            s.param1.x
+        );
+    }
+
+    // Box
+    if (s.type == BOX) {
+        return boxSDF(
+            p,
+            s.position,
+            s.rotation,
+            s.param1
+        );
+    }
+
+    return sdf;
+}
+
+Shape operateSDF(Shape s1, Shape s2) {
+
+    if (s1.operation == UNION) {
+        return combine(s1, s2);
+    } else if (s1.operation == INTERSECTION) {
+        return intersection(s1, s2);
+    } else if (s1.operation == SUBTRACT) {
+        return subtract(s1, s2);
+    }
+
+    return s1;
 }
 
 Shape SceneSDF(vec3 p) {
@@ -154,52 +199,29 @@ Shape SceneSDF(vec3 p) {
     Shape check;
 
     for (int i = 0; i < 20; i++) {
-        if (check.type < 0) {
+        check = shapes[i];
+
+        if (!check.checkShape) {
+            continue;
+        }
+
+        if (check.type <= 0) {
             break;
         }
 
-        // Sphere
-        if (check.type == 1) {
-            check.signedDistance = sphereSDF(
-                p,
-                check.position,
-                check.rotation,
-                check.param1.x
-            );
+        // Assign sdf of this shape
+        check.signedDistance = assignSDF(p, check);
+
+        // SDF operations
+        if (check.operation > 0) {
+            Shape opd = shapes[check.operandIndex];
+            opd.signedDistance = assignSDF(p, opd);
+
+            check = operateSDF(check, opd);
         }
 
-
+        scene = CheckScene(scene, check);
     }
-
-//    Shape shape;
-//    Shape sphere;
-//
-//    // Sphere drawing
-//    for (int i = 0; i < numSpheres; i++) {
-//        shape = spheres[i].base;
-//        shape.signedDistance =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
-//
-//        if (i == 0) {
-//            sphere = shape;
-//        } else {
-//            scene = CheckScene(scene, shape);
-//        }
-//    }
-//
-//    Shape box;
-//
-//    // Box drawing
-//    for (int i = 0; i < numBoxes; i++) {
-//        shape = boxes[i].base;
-//        shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
-//        if (i == 0) {
-//            box = shape;
-//        } else {
-//            scene = CheckScene(scene, shape);
-//        }
-//    }
-//
-//    scene = CheckScene(scene, intersection(sphere, box));
 
 	return scene;
 }

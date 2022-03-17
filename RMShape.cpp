@@ -1,6 +1,6 @@
 #include "RMShape.h"
 
-std::vector<rm::RMShape> rm::RMShape::shapes;
+std::vector<rm::RMShape*> rm::RMShape::shapes;
 
 rm::RMShape::RMShape() {
     position = Vec3(0, 0, 0);
@@ -19,44 +19,58 @@ rm::RMShape::RMShape() {
     type = rm::Invalid; // Default to sphere because there is no 'null' shape
 
     // Save this shape
-    rm::RMShape::shapes.push_back(*this);
+    rm::RMShape::shapes.push_back(this);
 }
 
 // Drawing - Sending values to shader //
 void rm::RMShape::draw(sf::Shader* shader) {
-    shader->setUniform("shapes[" + std::to_string(index) + "].poisiton", position);
+    shader->setUniform("shapes[" + std::to_string(index) + "].position", position);
     shader->setUniform("shapes[" + std::to_string(index) + "].rotation", rotation);
-    shader->setUniform("shapes[" + std::to_string(index) + "].poisiton", color   );
+    shader->setUniform("shapes[" + std::to_string(index) + "].color",    color   );
     shader->setUniform("shapes[" + std::to_string(index) + "].param1",   param1  );
     shader->setUniform("shapes[" + std::to_string(index) + "].param2",   param2  );
 
-    shader->setUniform("shapes[" + std::to_string(index) + "].operation",    operation   );
-    shader->setUniform("shapes[" + std::to_string(index) + "].operandIndex", operandIndex);
-    shader->setUniform("shapes[" + std::to_string(index) + "].checkShape",   checkShape  );
+    shader->setUniform("shapes[" + std::to_string(index) + "].operation",    (int)operation );
+    shader->setUniform("shapes[" + std::to_string(index) + "].operandIndex", operandIndex   );
+    shader->setUniform("shapes[" + std::to_string(index) + "].checkShape",   checkShape     );
 
-    shader->setUniform("shapes[" + std::to_string(index) + "].type", 0);
+    shader->setUniform("shapes[" + std::to_string(index) + "].type", type);
+
+    // Send any shapes that are now part of this shape to the shader
+    if (operandIndex > -1) {
+        shapes.at(operandIndex)->draw(shader);
+    }
 }
 
 // Different Shapes
 
-rm::RMShape& rm::RMShape::createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r) {
-    RMShape sphere;
-    sphere.setPosition(pos);
-    sphere.setRotation(rot);
-    sphere.setColor(col);
-    sphere.setParam1(Vec3(r, 0, 0));
+rm::RMShape* rm::RMShape::createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r) {
+    RMShape* sphere = new RMShape();
+    sphere->setPosition(pos);
+    sphere->setRotation(rot);
+    sphere->setColor(col);
+    sphere->setParam1(Vec3(r, 0, 0));
+    sphere->setType(rm::Sphere);
 
     return sphere;
 }
 
-rm::RMShape& rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
-    RMShape box;
-    box.setPosition(pos);
-    box.setRotation(rot);
-    box.setColor(col);
-    box.setParam1(size);
+rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
+    RMShape* box = new RMShape();
+    box->setPosition(pos);
+    box->setRotation(rot);
+    box->setColor(col);
+    box->setParam1(size);
+    box->setType(rm::Box);
 
     return box;
+}
+
+// Different Operations //
+// Mostly jsut a wrapper around the setOperation function
+
+void rm::RMShape::combine(rm::RMShape* opd) {
+    setOperation(rm::Union, opd);
 }
 
 // Setters //
@@ -85,6 +99,16 @@ void rm::RMShape::setType(rm::ShapeType t) {
     type = t;
 }
 
+void rm::RMShape::setOperation(rm::Operation op, rm::RMShape* opd) {
+    operation = op;
+    operandIndex = opd->getIndex();
+    opd->setVisible(false);
+}
+
+void rm::RMShape::setVisible(bool visible) {
+    checkShape = visible;
+}
+
 // Getters //
 
 Vec3 rm::RMShape::getPosition() {
@@ -108,5 +132,9 @@ Vec3 rm::RMShape::getParam2() {
 }
 
 rm::ShapeType rm::RMShape::getType() {
-    return type;
+    return (rm::ShapeType)type;
+}
+
+int rm::RMShape::getIndex() {
+    return index;
 }
