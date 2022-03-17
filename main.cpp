@@ -6,8 +6,8 @@
 #include <conio.h>
 
 #include "RMEnums.h"
+#include "RMShape.h"
 #include "Rotations.h"
-#include "Shape.h"
 #include "Sphere.h"
 #include "Box.h"
 

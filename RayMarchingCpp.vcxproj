@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RMShape.cpp" />
     <ClCompile Include="Rotations.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -29,7 +30,7 @@
     <ClInclude Include="Box.h" />
     <ClInclude Include="RMEnums.h" />
     <ClInclude Include="Rotations.h" />
-    <ClInclude Include="Shape.h" />
+    <ClInclude Include="RMShape.h" />
     <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
