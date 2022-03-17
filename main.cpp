@@ -5,6 +5,7 @@
 #include <iostream>
 #include <conio.h>
 
+#include "RMEnums.h"
 #include "Rotations.h"
 #include "Shape.h"
 #include "Sphere.h"
@@ -27,20 +28,6 @@ void drawSphere(Sphere& sphere);
 void drawBox(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, Glsl::Vec3 size);
 void drawBox(Box& box);
 
-enum Input {
-	None		= 0b0000000000,
-	Forward		= 0b0000000001,
-	Left		= 0b0000000010,
-	Right		= 0b0000000100,
-	Back		= 0b0000001000,
-	Up			= 0b0000010000,
-	Down		= 0b0000100000,
-	LookLeft	= 0b0001000000,
-	LookRight	= 0b0010000000,
-	LookUp		= 0b0100000000,
-	LookDown	= 0b1000000000,
-};
-
 // Shape stuff
 std::vector<Sphere> spheres;
 std::vector<Box> boxes;
@@ -50,7 +37,7 @@ int main() {
 	RenderWindow window(VideoMode(800, 600), "Ray Marcher");
 
 	// Inputs
-	short userInput = None;
+	short userInput = rm::None;
 
 	// Camera
 	Vector3f position(0, 1, 0);
@@ -106,54 +93,54 @@ int main() {
 				// Movement
 
 				// Don't keep adding if already going in that direction
-				if (event.key.code == Keyboard::W && (userInput & Forward) != Forward) {
-					userInput += Forward;
+				if (event.key.code == Keyboard::W && (userInput & rm::Forward) != rm::Forward) {
+					userInput += rm::Forward;
 					break;
 				}
 
-				if (event.key.code == Keyboard::A && (userInput & Left) != Left) {
-					userInput += Left;
+				if (event.key.code == Keyboard::A && (userInput & rm::Left) != rm::Left) {
+					userInput += rm::Left;
 					break;
 				}
 
-				if (event.key.code == Keyboard::S && (userInput & Back) != Back) {
-					userInput += Back;
+				if (event.key.code == Keyboard::S && (userInput & rm::Back) != rm::Back) {
+					userInput += rm::Back;
 					break;
 				}
 
-				if (event.key.code == Keyboard::D && (userInput & Right) != Right) {
-					userInput += Right;
+				if (event.key.code == Keyboard::D && (userInput & rm::Right) != rm::Right) {
+					userInput += rm::Right;
 					break;
 				}
 
-				if (event.key.code == Keyboard::Space && (userInput & Up) != Up) {
-					userInput += Up;
+				if (event.key.code == Keyboard::Space && (userInput & rm::Up) != rm::Up) {
+					userInput += rm::Up;
 					break;
 				}
 
-				if (event.key.code == Keyboard::LControl && (userInput & Down) != Down) {
-					userInput += Down;
+				if (event.key.code == Keyboard::LControl && (userInput & rm::Down) != rm::Down) {
+					userInput += rm::Down;
 					break;
 				}
 
 				// Rotation
-				if (event.key.code == Keyboard::Right && (userInput & LookRight) != LookRight) {
-					userInput += LookRight;
+				if (event.key.code == Keyboard::Right && (userInput & rm::LookRight) != rm::LookRight) {
+					userInput += rm::LookRight;
 					break;
 				}
 
-				if (event.key.code == Keyboard::Left && (userInput & LookLeft) != LookLeft) {
-					userInput += LookLeft;
+				if (event.key.code == Keyboard::Left && (userInput & rm::LookLeft) != rm::LookLeft) {
+					userInput += rm::LookLeft;
 					break;
 				}
 
-				if (event.key.code == Keyboard::Up && (userInput & LookUp) != LookUp) {
-					userInput += LookUp;
+				if (event.key.code == Keyboard::Up && (userInput & rm::LookUp) != rm::LookUp) {
+					userInput += rm::LookUp;
 					break;
 				}
 
-				if (event.key.code == Keyboard::Down && (userInput & LookDown) != LookDown) {
-					userInput += LookDown;
+				if (event.key.code == Keyboard::Down && (userInput & rm::LookDown) != rm::LookDown) {
+					userInput += rm::LookDown;
 					break;
 				}
 			}
@@ -163,53 +150,53 @@ int main() {
 
 				// Movement
 				if (event.key.code == Keyboard::W) {
-					userInput -= Forward;
+					userInput -= rm::Forward;
 					break;
 				}
 
 				if (event.key.code == Keyboard::A) {
-					userInput -= Left;
+					userInput -= rm::Left;
 					break;
 				}
 
 				if (event.key.code == Keyboard::S) {
-					userInput -= Back;
+					userInput -= rm::Back;
 					break;
 				}
 
 				if (event.key.code == Keyboard::D) {
-					userInput -= Right;
+					userInput -= rm::Right;
 					break;
 				}
 
 				if (event.key.code == Keyboard::Space) {
-					userInput -= Up;
+					userInput -= rm::Up;
 					break;
 				}
 
 				if (event.key.code == Keyboard::LControl) {
-					userInput -= Down;
+					userInput -= rm::Down;
 					break;
 				}
 
 				// Rotation
 				if (event.key.code == Keyboard::Right) {
-					userInput -= LookRight;
+					userInput -= rm::LookRight;
 					break;
 				}
 
 				if (event.key.code == Keyboard::Left) {
-					userInput -= LookLeft;
+					userInput -= rm::LookLeft;
 					break;
 				}
 
 				if (event.key.code == Keyboard::Up) {
-					userInput -= LookUp;
+					userInput -= rm::LookUp;
 					break;
 				}
 
 				if (event.key.code == Keyboard::Down) {
-					userInput -= LookDown;
+					userInput -= rm::LookDown;
 					break;
 				}
 
@@ -254,34 +241,34 @@ int main() {
 		// Update here
 
 		// Check userInput
-		if ((userInput |  None) !=  None) {
+		if ((userInput | rm::None) != rm::None) {
 
 			// Temporarily zero look.y so movement is along a plane
 			float tempY = look.y;
 			look.y = 0;
 
 			// Movement
-			if ((userInput &  Forward) ==  Forward) {
+			if ((userInput & rm::Forward) == rm::Forward) {
 				position += look * deltaTime * walkScalar;
 			}
 
-			if ((userInput & Left) == Left) {
+			if ((userInput & rm::Left) == rm::Left) {
 				position -= sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
 			}
 
-			if ((userInput & Back) == Back) {
+			if ((userInput & rm::Back) == rm::Back) {
 				position -= look * deltaTime * walkScalar;
 			}
 
-			if ((userInput & Right) == Right) {
+			if ((userInput & rm::Right) == rm::Right) {
 				position += sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
 			}
 
-			if ((userInput & Up) == Up) {
+			if ((userInput & rm::Up) == rm::Up) {
 				position += sf::Vector3f(0, 1, 0) * deltaTime * walkScalar;
 			}
 
-			if ((userInput & Down) == Down) {
+			if ((userInput & rm::Down) == rm::Down) {
 				position -= sf::Vector3f(0, 1, 0) * deltaTime * walkScalar;
 			}
 
@@ -289,19 +276,19 @@ int main() {
 			look.y = tempY;
 
 			// Rotation
-			if ((userInput & LookRight) == LookRight) {
+			if ((userInput & rm::LookRight) == rm::LookRight) {
 				rotation.y += (deltaTime * rotateScalar);
 			}
 
-			if ((userInput & LookLeft) == LookLeft) {
+			if ((userInput & rm::LookLeft) == rm::LookLeft) {
 				rotation.y -= (deltaTime * rotateScalar);
 			}
 
-			if ((userInput & LookUp) == LookUp) {
+			if ((userInput & rm::LookUp) == rm::LookUp) {
 				rotation.x -= (deltaTime * rotateScalar);
 			}
 
-			if ((userInput & LookDown) == LookDown) {
+			if ((userInput & rm::LookDown) == rm::LookDown) {
 				rotation.x += (deltaTime * rotateScalar);
 			}
 		}

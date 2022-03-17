@@ -61,6 +61,10 @@ struct Shape {
     vec3 param1;
     vec3 param2;
 
+    // Used for combining, subtracting, intersecting, etc. two shapes
+    int operation;
+    int operandIndex;
+
     // material properties
     float metallic;
 };
