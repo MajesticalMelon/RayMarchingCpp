@@ -8,6 +8,6 @@ using namespace sf::Glsl;
 
 struct Box {
 public:
-	RMShape base;
+	rm::RMShape base;
 	Vec3 size;
 };

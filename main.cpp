@@ -70,6 +70,14 @@ int main() {
 	// Check for window events
 	Event event;
 
+	// Redoing sphere stuff
+	rm::RMShape sphere1 = rm::RMShape::createSphere(
+		Glsl::Vec3(-1.5 + cos(0.5 * gameClock.getElapsedTime().asSeconds()), 3, 0),
+		Glsl::Vec3(0, 0, 0),
+		Glsl::Vec4(cos(5 * gameClock.getElapsedTime().asSeconds()), 0, sin(2 * gameClock.getElapsedTime().asSeconds()), 0.05),
+		0.2
+	);
+
 	while (window.isOpen()) {
 		// Rotate the user's look vector
 		look = rotateXYZ(Vector3f(0, 0, 1), rotation);
@@ -208,7 +216,9 @@ int main() {
 
 		// Start drawing here (Gets redrawn every frame so positions could be modified)
 		
-		drawSphere(
+		sphere1.draw(&rayMarchingShader);
+
+		/*drawSphere(
 			Glsl::Vec3(-1.5 + cos(0.5 * gameClock.getElapsedTime().asSeconds()), 3, 0),
 			Glsl::Vec3(0, 0, 0), 
 			Glsl::Vec4(cos(5 * gameClock.getElapsedTime().asSeconds()), 0, sin(2 * gameClock.getElapsedTime().asSeconds()), 0.05),
@@ -227,7 +237,7 @@ int main() {
 			Glsl::Vec3(3, 1, 0),
 			Glsl::Vec4(0, 1, 0.7, 0.1),
 			Glsl::Vec3(1, 3, 0.01)
-		);
+		);*/
 
 		// End drawing here
 		window.draw(screen, &rayMarchingShader);
@@ -298,7 +308,9 @@ int main() {
 		rayMarchingShader.setUniform("camPosition", position);
 		rayMarchingShader.setUniform("camRotation", rotation);
 
-		sendShapes(rayMarchingShader);
+		rm::RMShape::shapes.clear();
+
+		//sendShapes(rayMarchingShader);
 	}
 }
 
@@ -312,60 +324,60 @@ Vector3f normalize(sf::Vector3f p) {
 	return p;
 }
 
-void sendShapes(Shader &shader) {
-	for (int i = 0; i < spheres.size(); i++) {
-
-		Sphere s = spheres.at(i);
-
-		shader.setUniform("spheres[" + std::to_string(i) + "].base.position", s.base.position);
-		shader.setUniform("spheres[" + std::to_string(i) + "].base.rotation", s.base.rotation);
-		shader.setUniform("spheres[" + std::to_string(i) + "].base.color", s.base.color);
-		shader.setUniform("spheres[" + std::to_string(i) + "].radius", s.radius);
-	}
-
-	shader.setUniform("numSpheres", (int)spheres.size());
-
-	spheres.clear();
-
-	for (int i = 0; i < boxes.size(); i++) {
-
-		Box b = boxes.at(i);
-
-		shader.setUniform("boxes[" + std::to_string(i) + "].base.position", b.base.position);
-		shader.setUniform("boxes[" + std::to_string(i) + "].base.rotation", b.base.rotation);
-		shader.setUniform("boxes[" + std::to_string(i) + "].base.color", b.base.color);
-		shader.setUniform("boxes[" + std::to_string(i) + "].size", b.size);
-	}
-
-	shader.setUniform("numBoxes", (int)boxes.size());
-
-	boxes.clear();
-}
-
-void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad) {
-	Sphere sphere;
-	sphere.base.position = pos;
-	sphere.base.rotation = rot;
-	sphere.base.color = col;
-	sphere.radius = rad;
-
-	spheres.push_back(sphere);
-}
-
-void drawSphere(Sphere &sphere) {
-	spheres.push_back(sphere);
-}
-
-void drawBox(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, Glsl::Vec3 size) {
-	Box box;
-	box.base.position = pos;
-	box.base.rotation = rot;
-	box.base.color = col;
-	box.size = size;
-
-	boxes.push_back(box);
-}
-
-void drawBox(Box& box) {
-	boxes.push_back(box);
-}
+//void sendShapes(Shader &shader) {
+//	for (int i = 0; i < spheres.size(); i++) {
+//
+//		Sphere s = spheres.at(i);
+//
+//		shader.setUniform("spheres[" + std::to_string(i) + "].base.position", s.base.getPosition());
+//		shader.setUniform("spheres[" + std::to_string(i) + "].base.rotation", s.base.getRotation());
+//		shader.setUniform("spheres[" + std::to_string(i) + "].base.color", s.base.getColor());
+//		shader.setUniform("spheres[" + std::to_string(i) + "].radius", s.base.getParam1().x);
+//	}
+//
+//	shader.setUniform("numSpheres", (int)spheres.size());
+//
+//	spheres.clear();
+//
+//	for (int i = 0; i < boxes.size(); i++) {
+//
+//		Box b = boxes.at(i);
+//
+//		shader.setUniform("boxes[" + std::to_string(i) + "].base.position", b.base.getPosition());
+//		shader.setUniform("boxes[" + std::to_string(i) + "].base.rotation", b.base.getRotation());
+//		shader.setUniform("boxes[" + std::to_string(i) + "].base.color", b.base.getColor());
+//		shader.setUniform("boxes[" + std::to_string(i) + "].size", b.base.getParam1());
+//	}
+//
+//	shader.setUniform("numBoxes", (int)boxes.size());
+//
+//	boxes.clear();
+//}
+//
+//void drawSphere(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, float rad) {
+//	Sphere sphere;
+//	sphere.base.setPosition(pos);
+//	sphere.base.rotation = rot;
+//	sphere.base.color = col;
+//	sphere.radius = rad;
+//
+//	spheres.push_back(sphere);
+//}
+//
+//void drawSphere(Sphere &sphere) {
+//	spheres.push_back(sphere);
+//}
+//
+//void drawBox(Glsl::Vec3 pos, Glsl::Vec3 rot, Glsl::Vec4 col, Glsl::Vec3 size) {
+//	Box box;
+//	box.base.position = pos;
+//	box.base.rotation = rot;
+//	box.base.color = col;
+//	box.size = size;
+//
+//	boxes.push_back(box);
+//}
+//
+//void drawBox(Box& box) {
+//	boxes.push_back(box);
+//}

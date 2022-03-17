@@ -16,9 +16,15 @@ namespace rm {
 	};
 
 	enum Operation {
-		None,
+		NoOp,
 		Union,
 		Intersection,
 		Subtract
+	};
+
+	enum ShapeType {
+		Invalid,
+		Sphere,
+		Box
 	};
 }

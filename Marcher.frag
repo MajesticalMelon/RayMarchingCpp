@@ -66,6 +66,8 @@ struct Shape {
     int operandIndex;
     bool checkShape;
 
+    int type;
+
     // material properties
     float metallic;
 };
@@ -149,35 +151,55 @@ Shape SceneSDF(vec3 p) {
     scene.color = vec4(1, 1, 1, 1);
     scene.metallic = 0;
 
-    Shape shape;
-    Shape sphere;
+    Shape check;
 
-    // Sphere drawing
-    for (int i = 0; i < numSpheres; i++) {
-        shape = spheres[i].base;
-        shape.signedDistance =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
-
-        if (i == 0) {
-            sphere = shape;
-        } else {
-            scene = CheckScene(scene, shape);
+    for (int i = 0; i < 20; i++) {
+        if (check.type < 0) {
+            break;
         }
+
+        // Sphere
+        if (check.type == 1) {
+            check.signedDistance = sphereSDF(
+                p,
+                check.position,
+                check.rotation,
+                check.param1.x
+            );
+        }
+
+
     }
 
-    Shape box;
-
-    // Box drawing
-    for (int i = 0; i < numBoxes; i++) {
-        shape = boxes[i].base;
-        shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
-        if (i == 0) {
-            box = shape;
-        } else {
-            scene = CheckScene(scene, shape);
-        }
-    }
-
-    scene = CheckScene(scene, intersection(sphere, box));
+//    Shape shape;
+//    Shape sphere;
+//
+//    // Sphere drawing
+//    for (int i = 0; i < numSpheres; i++) {
+//        shape = spheres[i].base;
+//        shape.signedDistance =  sphereSDF(p, spheres[i].base.position, spheres[i].base.rotation, spheres[i].radius);
+//
+//        if (i == 0) {
+//            sphere = shape;
+//        } else {
+//            scene = CheckScene(scene, shape);
+//        }
+//    }
+//
+//    Shape box;
+//
+//    // Box drawing
+//    for (int i = 0; i < numBoxes; i++) {
+//        shape = boxes[i].base;
+//        shape.signedDistance =  boxSDF(p, boxes[i].base.position, boxes[i].base.rotation, boxes[i].size);
+//        if (i == 0) {
+//            box = shape;
+//        } else {
+//            scene = CheckScene(scene, shape);
+//        }
+//    }
+//
+//    scene = CheckScene(scene, intersection(sphere, box));
 
 	return scene;
 }

@@ -4,6 +4,6 @@
 
 struct Sphere {
 public:
-	RMShape base;
+	rm::RMShape base;
 	float radius = 0;
 };

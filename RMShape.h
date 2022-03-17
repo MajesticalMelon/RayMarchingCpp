@@ -1,24 +1,50 @@
 #pragma once
+#include <vector>
 #include <SFML/Graphics.hpp>
 
 using namespace sf::Glsl;
 
-class RMShape {
-private:
-    Vec3 position;
-    Vec3 rotation;
-    Vec4 color;
-    Vec3 param1;
-    Vec3 param2;
+#include "RMEnums.h"
 
-    // Used for combining, subtracting, intersecting, etc. two shapes
-    int operation;
-    int operandIndex;
-    bool checkShape;
-public:
-    RMShape();
+namespace rm {
+    class RMShape {
+    private:
+        Vec3 position;
+        Vec3 rotation;
+        Vec4 color;
+        Vec3 param1;
+        Vec3 param2;
 
-    void draw(sf::Shader &shader);
-    static RMShape& createSphere();
-    static RMShape& createBox();
-};
+        // Used for combining, subtracting, intersecting, etc. two shapes
+        int operation;
+        int operandIndex;
+        bool checkShape;
+
+        // Shape type and index
+        int index;
+        int type;
+    public:
+        RMShape();
+
+        void draw(sf::Shader* shader);
+
+        void setPosition(Vec3 pos);
+        void setRotation(Vec3 pos);
+        void setColor(Vec4 col);
+        void setParam1(Vec3 p1);
+        void setParam2(Vec3 p2);
+        void setType(ShapeType t);
+
+        Vec3 getPosition();
+        Vec3 getRotation();
+        Vec4 getColor();
+        Vec3 getParam1();
+        Vec3 getParam2();
+        rm::ShapeType getType();
+
+        static std::vector<RMShape> shapes;
+
+        static RMShape& createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r);
+        static RMShape& createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size);
+    };
+}
