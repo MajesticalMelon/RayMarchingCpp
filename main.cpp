@@ -224,7 +224,7 @@ int main() {
 		drawSphere(
 			Glsl::Vec3(-1.5 + cos(0.5 * gameClock.getElapsedTime().asSeconds()), 3, 0),
 			Glsl::Vec3(0, 0, 0), 
-			Glsl::Vec4(cos(gameClock.getElapsedTime().asSeconds()), 0, sin(gameClock.getElapsedTime().asSeconds()), 0.05),
+			Glsl::Vec4(cos(5 * gameClock.getElapsedTime().asSeconds()), 0, sin(2 * gameClock.getElapsedTime().asSeconds()), 0.05),
 			0.2
 		);
 

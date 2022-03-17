@@ -87,6 +87,11 @@ float smoothMin(float a, float b, float k) {
     return mix(a, b, h) - k*h*(1.0-h);
 }
 
+float smoothMax(float a, float b, float k) {
+    float h = clamp(0.5 + 0.5*(a+b)/k, 0.0, 1.0);
+    return mix(a, b, h) - k*h*(1.0-h);
+}
+
 vec4 smoothColor(float d1, float d2, vec4 a, vec4 b, float k) {
     float h = clamp(0.5 + 0.5*(d2 - d1)/k, 0.0, 1.0);
     return mix(b, a, h) - k*h*(1.0-h);
@@ -110,7 +115,7 @@ Shape combine(Shape s1, Shape s2) {
     return returned;
 }
 
-Shape intersect(Shape s1, Shape s2) {
+Shape intersection(Shape s1, Shape s2) {
     Shape returned = s1.signedDistance > s2.signedDistance ? s1 : s2;
     return returned;
 }
@@ -165,7 +170,7 @@ Shape SceneSDF(vec3 p) {
         }
     }
 
-    scene = CheckScene(scene, combine(sphere, box));
+    scene = CheckScene(scene, intersection(sphere, box));
 
 	return scene;
 }
@@ -188,7 +193,6 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         // Check if the ray has hit
         if (dist < TOLERANCE)
         {
-           
             accCol.rgb += scene.color.rgb * scene.color.a * (1. - accCol.a);
 
             accCol.a += scene.color.a * (1. - accCol.a);
@@ -212,7 +216,8 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         if (distTotal > MAX_DISTANCE)
         {
             if (accCol.a < TOLERANCE) {
-                discard;
+                dCol = vec4(0, 0, 0, 1);
+                return distTotal;
             }
 
             break;
@@ -250,11 +255,9 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
 
             if (scene.color.a <= 1 - TOLERANCE) {
                 // Add more to the distance to get it through the object
-                distTotal += abs(dist) * TOLERANCE;
+                distTotal += TOLERANCE;
 
                 hitTransparentObject = true;
-            } else {
-                hitTransparentObject = false;
             }
 
             if (accCol.a >= 1. - TOLERANCE) {
@@ -300,6 +303,7 @@ vec4 getLight(vec3 p, vec4 color) {
     vec3 n = getNormal(p);
 
     vec3 dif = vec3(1, 1, 1);
+    float alpha = 1.;
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
@@ -312,7 +316,7 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= 0.5;
     }
 
-    return vec4(color.rgb * dif, 1);
+    return vec4(color.rgb * dif, 1.);
 }
 
 void main() {
