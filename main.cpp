@@ -62,9 +62,10 @@ int main() {
 	Shader rayMarchingShader;
 	rayMarchingShader.loadFromFile("Marcher.frag", Shader::Type::Fragment);
 
-	// Send initial position to shader
+	// Send initial position and size to shader
 	rayMarchingShader.setUniform("camPosition", position);
 	rayMarchingShader.setUniform("camRotation", rotation);
+	rayMarchingShader.setUniform("windowDimensions", window.getView().getSize());
 
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
@@ -89,6 +90,11 @@ int main() {
 		while (window.pollEvent(event)) {
 			if (event.type == Event::Closed) {
 				window.close();
+			}
+
+			if (event.type == Event::Resized) {
+				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f(window.getSize().x, window.getSize().y));
+				screen.setSize(sf::Vector2f(window.getSize().x, window.getSize().y));
 			}
 
 			// Go in the direction that was pressed
@@ -232,7 +238,7 @@ int main() {
 		drawBox(
 			Glsl::Vec3(-2, 3, 0),
 			Glsl::Vec3(3, 1, 0),
-			Glsl::Vec4(0, 1, 0.7, 0.5),
+			Glsl::Vec4(0, 1, 0.7, 0.1),
 			Glsl::Vec3(1, 3, 0.01)
 		);
 

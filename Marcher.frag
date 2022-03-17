@@ -4,7 +4,7 @@ uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
 const float MAX_DISTANCE = 500.;
-const float TOLERANCE = 0.01;
+const float TOLERANCE = 0.001;
 const int MAX_STEPS = 10000;
 const float PI = 3.14159265359;
 
@@ -44,6 +44,7 @@ vec3 rotateXYZ(vec3 p, vec3 rot) {
     return rotated;
 }
 
+uniform vec2 windowDimensions = vec2(800, 600);
 uniform vec3 camPosition = vec3(0, 1, 0);
 uniform vec3 camRotation = vec3(0);
 
@@ -57,6 +58,8 @@ struct Shape {
     vec3 rotation;
     vec4 color;
     float signedDistance;
+    vec3 param1;
+    vec3 param2;
 
     // material properties
     float metallic;
@@ -208,17 +211,20 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         
         if (distTotal > MAX_DISTANCE)
         {
-            // Color of sky
-            dCol = vec4(0.7, 0.9, 1., 1.);
-            return distTotal;
+            if (accCol.a < TOLERANCE) {
+                discard;
+            }
+
+            break;
         }
     }
 
-    //accCol.a = 1.;
+    accCol.a = 1.;
     dCol = accCol;
     return distTotal;
 }
 
+// Used for proper lighting of tranparent objects
 float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTransparentObject) {
 	float distTotal = 0.;
 
@@ -268,7 +274,7 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
         }
     }
 
-    //accCol.a = 1;
+    accCol.a = 1;
     dCol = accCol;
     return distTotal;
 }
@@ -289,11 +295,11 @@ vec3 getNormal(vec3 p) {
 vec4 getLight(vec3 p, vec4 color) {
     vec3 lightPos = vec3(p.x, 20., p.z);
     vec3 l = normalize(lightPos - p);
-    l = rotateX(l, cos(time));
+    l = rotateX(l, 0.4);
 
     vec3 n = getNormal(p);
 
-    vec3 dif = vec3(smoothstep(0., 1., dot(n, l)));
+    vec3 dif = vec3(1, 1, 1);
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
@@ -306,15 +312,13 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= 0.5;
     }
 
-    return vec4(color.rgb * dif, 1.);
+    return vec4(color.rgb * dif, 1);
 }
 
 void main() {
-    vec2 dim = vec2(800, 600);
+    vec2 uv = (2 * gl_FragCoord.xy - windowDimensions.xy) / windowDimensions.y;
 
-    vec2 uv = (vec2(gl_FragCoord.xy) / dim) - 0.5;
-
-    vec3 rd = normalize(vec3(uv.x, uv.y, 1));
+    vec3 rd = normalize(vec3(uv.x, uv.y, 1.5));
     rd = rotateXYZ(rd, camRotation);
 
     float dist = RayMarch(camPosition, rd, difCol);
