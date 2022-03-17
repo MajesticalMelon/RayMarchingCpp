@@ -3,7 +3,7 @@
 uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
-const float MAX_DISTANCE = 500.;
+const float MAX_DISTANCE = 100.;
 const float TOLERANCE = 0.001;
 const int MAX_STEPS = 10000;
 const float PI = 3.14159265359;
@@ -354,7 +354,6 @@ vec4 getLight(vec3 p, vec4 color) {
     vec3 n = getNormal(p);
 
     vec3 dif = vec3(1, 1, 1);
-    float alpha = 1.;
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
@@ -381,18 +380,6 @@ void main() {
     vec3 pos = camPosition + rd * dist;
 
     vec4 col = getLight(pos, difCol);
-
-
-    // Reflection loop - Replace RayMarch() with a special reflection march;
-
-//    if (SceneSDF(pos).metallic > TOLERANCE) {
-//        for (int i = 0; i < 0; i++) {
-//            vec3 n = getNormal(pos);
-//            rd = reflect(rd, n);
-//            pos += rd * RayMarch(pos + n * TOLERANCE, rd, difCol);
-//            col = getLight(pos, difCol);
-//        }
-//    }
 
 	gl_FragColor = col * difCol;
 }
