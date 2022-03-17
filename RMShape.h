@@ -18,7 +18,7 @@ private:
 public:
     RMShape();
 
-    void draw(Shader &shader);
+    void draw(sf::Shader &shader);
     static RMShape& createSphere();
     static RMShape& createBox();
 };

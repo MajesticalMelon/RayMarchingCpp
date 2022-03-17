@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "Shape.h"
+#include "RMShape.h"
 
 using namespace sf::Glsl;
 
