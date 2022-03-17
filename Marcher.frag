@@ -64,6 +64,7 @@ struct Shape {
     // Used for combining, subtracting, intersecting, etc. two shapes
     int operation;
     int operandIndex;
+    bool checkShape;
 
     // material properties
     float metallic;
@@ -78,6 +79,8 @@ struct Box {
     Shape base;
     vec3 size;
 };
+
+uniform Shape shapes[20];
 
 uniform Sphere spheres[10];
 uniform int numSpheres = 0;
