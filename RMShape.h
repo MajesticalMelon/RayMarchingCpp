@@ -39,6 +39,8 @@ namespace rm {
         void setVisible(bool visible);
 
         void combine(RMShape* opd);
+        void intersection(RMShape* opd);
+        void subtract(RMShape* opd);
 
         Vec3 getPosition();
         Vec3 getRotation();

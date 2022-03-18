@@ -73,6 +73,14 @@ void rm::RMShape::combine(rm::RMShape* opd) {
     setOperation(rm::Union, opd);
 }
 
+void rm::RMShape::intersection(rm::RMShape* opd) {
+    setOperation(rm::Intersection, opd);
+}
+
+void rm::RMShape::subtract(rm::RMShape* opd) {
+    setOperation(rm::Subtract, opd);
+}
+
 // Setters //
 
 void rm::RMShape::setPosition(Vec3 pos) {

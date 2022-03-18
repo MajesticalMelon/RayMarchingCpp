@@ -78,7 +78,7 @@ int main() {
 		2
 	);
 
-	sphere1->combine(box1);
+	sphere1->subtract(box1);
 
 	while (window.isOpen()) {
 		// Rotate the user's look vector
