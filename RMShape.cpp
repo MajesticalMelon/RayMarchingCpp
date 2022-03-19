@@ -81,6 +81,18 @@ void rm::RMShape::subtract(rm::RMShape* opd) {
     setOperation(rm::Subtract, opd);
 }
 
+void rm::RMShape::smoothCombine(rm::RMShape* opd) {
+    setOperation(rm::SmoothUnion, opd);
+}
+
+void rm::RMShape::smoothIntersection(rm::RMShape* opd) {
+    setOperation(rm::SmoothIntersection, opd);
+}
+
+void rm::RMShape::smoothSubtract(rm::RMShape* opd) {
+    setOperation(rm::SmoothSubtract, opd);
+}
+
 // Setters //
 
 void rm::RMShape::setPosition(Vec3 pos) {

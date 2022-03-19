@@ -41,6 +41,9 @@ namespace rm {
         void combine(RMShape* opd);
         void intersection(RMShape* opd);
         void subtract(RMShape* opd);
+        void smoothCombine(RMShape* opd);
+        void smoothIntersection(RMShape* opd);
+        void smoothSubtract(RMShape* opd);
 
         Vec3 getPosition();
         Vec3 getRotation();

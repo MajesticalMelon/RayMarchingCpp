@@ -19,7 +19,10 @@ namespace rm {
 		NoOp,
 		Union,
 		Intersection,
-		Subtract
+		Subtract,
+		SmoothUnion,
+		SmoothIntersection,
+		SmoothSubtract
 	};
 
 	enum ShapeType {

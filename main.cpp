@@ -37,14 +37,14 @@ void init() {
 		sf::Glsl::Vec3(-1.5f, 3, 0),
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec4(cos(5), 0, sin(2), 0.05),
-		0.2
+		0.5f
 	);
 
 	box1 = rm::RMShape::createBox(
 		sf::Glsl::Vec3(-2, 3, 0),
 		sf::Glsl::Vec3(3, 1, 0),
 		sf::Glsl::Vec4(0, 1, 0.7, 0.1),
-		sf::Glsl::Vec3(1, 3, 0.01)
+		sf::Glsl::Vec3(1, 3, 0.2f)
 	);
 
 	sphere2 = rm::RMShape::createSphere(
@@ -55,7 +55,7 @@ void init() {
 	);
 
 	// Form a union of sphere1 and box1
-	sphere1->combine(box1);
+	box1->smoothCombine(sphere1);
 }
 
 void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {
@@ -71,7 +71,7 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 	window->clear(sf::Color::Blue);
 
 	// Start drawing here (Gets redrawn every frame so positions could be modified)
-	sphere1->draw(shader);
+	box1->draw(shader);
 
 	sphere2->draw(shader);
 
@@ -92,6 +92,8 @@ void update(sf::Clock* gameClock) {
 	sf::Glsl::Vec3 spherePos = sphere1->getPosition();
 	spherePos.x = -1.5 + cos(0.5 * gameTime);
 	sphere1->setPosition(spherePos);
+
+	box1->setRotation(Vec3(3, gameTime, 0));
 
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {

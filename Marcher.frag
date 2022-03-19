@@ -16,6 +16,9 @@ const int BOX = 2;
 const int UNION = 1;
 const int INTERSECTION = 2;
 const int SUBTRACT = 3;
+const int SMOOTH_UNION = 4;
+const int SMOOTH_INTERSECTION = 5;
+const int SMOOTH_SUBTRACT = 6;
 
 vec4 difCol = vec4(0., 0., 0., 1.);
 
@@ -101,8 +104,13 @@ uniform int numBoxes = 0;
 
 // Copied from https://www.shadertoy.com/view/Ml3Gz8
 float smoothMin(float a, float b, float k) {
-    float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
-    return mix(a, b, h) - k*h*(1.0-h);
+    float h = clamp(0.5 + 0.5*(b-a)/k, 0.0, 1.0);
+    return mix(b, a, h) - k*h*(1.0-h);
+}
+
+float smoothMax(float a, float b, float k) {
+    float h = clamp(0.5 - 0.5*(b-a)/k, 0.0, 1.0);
+    return mix(b, a, h) + k*h*(1.0-h);
 }
 
 vec4 smoothColor(float d1, float d2, vec4 a, vec4 b, float k) {
@@ -123,8 +131,6 @@ float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
 // Shape operations
 Shape combine(Shape s1, Shape s2) {
     Shape returned = s1.signedDistance < s2.signedDistance ? s1 : s2;
-    returned.signedDistance = smoothMin(s1.signedDistance, s2.signedDistance, 0.2);
-    returned.color = smoothColor(s1.signedDistance, s2.signedDistance, s1.color, s2.color, 0.2);
     returned.checkShape = true;
     return returned;
 }
@@ -138,8 +144,34 @@ Shape intersection(Shape s1, Shape s2) {
 Shape subtract(Shape s1, Shape s2) {
     Shape negS1 = s1;
     negS1.signedDistance = -s1.signedDistance;
+    Shape returned = negS1.signedDistance > s2.signedDistance ? negS1 : s2;
+    returned.checkShape = true;
+    return returned;
+}
+
+Shape smoothCombine(Shape s1, Shape s2) {
+    Shape returned = s1.signedDistance < s2.signedDistance ? s1 : s2;
+    returned.signedDistance = smoothMin(s1.signedDistance, s2.signedDistance, 0.2);
+    returned.color = smoothColor(s1.signedDistance, s2.signedDistance, s1.color, s2.color, 0.2);
+    returned.checkShape = true;
+    return returned;
+}
+
+Shape smoothIntersection(Shape s1, Shape s2) {
+    Shape returned = s1.signedDistance > s2.signedDistance ? s1 : s2;
+    returned.signedDistance = smoothMax(s1.signedDistance, s2.signedDistance, 0.2);
+    returned.color = smoothColor(s1.signedDistance, s2.signedDistance, s1.color, s2.color, 0.2);
+    returned.checkShape = true;
+    return returned;
+}
+
+Shape smoothSubtract(Shape s1, Shape s2) {
+    Shape negS1 = s1;
+    negS1.signedDistance = -s1.signedDistance;
 
     Shape returned = negS1.signedDistance > s2.signedDistance ? negS1 : s2;
+    returned.signedDistance = smoothMax(negS1.signedDistance, s2.signedDistance, 0.2);
+    returned.color = smoothColor(s1.signedDistance, s2.signedDistance, s1.color, s2.color, 0.2);
     returned.checkShape = true;
     return returned;
 }
@@ -179,10 +211,16 @@ Shape operateSDF(Shape s1, Shape s2) {
 
     if (s1.operation == UNION) {
         return combine(s1, s2);
+    } else if (s1.operation == SUBTRACT) {
+        return subtract(s2, s1);
     } else if (s1.operation == INTERSECTION) {
         return intersection(s1, s2);
-    } else if (s1.operation == SUBTRACT) {
-        return subtract(s1, s2);
+    } else if (s1.operation == SMOOTH_UNION) {
+        return smoothCombine(s1, s2);
+    } else if (s1.operation == SMOOTH_SUBTRACT) {
+        return smoothSubtract(s2, s1);
+    } else if (s1.operation == SMOOTH_INTERSECTION) {
+        return smoothIntersection(s1, s2);
     }
 
     return s1;
@@ -328,7 +366,7 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
         }
     }
 
-    accCol.a = 1;
+    //accCol.a = 1;
     dCol = accCol;
     return distTotal;
 }
@@ -349,7 +387,7 @@ vec3 getNormal(vec3 p) {
 vec4 getLight(vec3 p, vec4 color) {
     vec3 lightPos = vec3(p.x, 20., p.z);
     vec3 l = normalize(lightPos - p);
-    l = rotateX(l, 0.4);
+    l = rotateX(l, cos(time));
 
     vec3 n = getNormal(p);
 
@@ -361,7 +399,9 @@ vec4 getLight(vec3 p, vec4 color) {
     float dist = lightMarch(p + n * TOLERANCE * 2, l, lightPos, col, hitTransparentObject);
 
     if (hitTransparentObject) {
-        dif *= col.rgb * 0.5;
+        //col.a *= 0.5;
+        col.rgb += color.rgb * color.a * (1. - col.a);
+        dif *= col.rgb;
     } else if (dist < length(lightPos - p) && !hitTransparentObject) {
         dif *= 0.5;
     }
