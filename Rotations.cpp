@@ -1,5 +1,7 @@
 #include "Rotations.h"
 
+using namespace sf;
+
 Vector3f rotateX(Vector3f p, float theta) {
 	return Vector3f(
 		p.x,
