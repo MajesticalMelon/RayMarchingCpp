@@ -66,6 +66,17 @@ rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
     return box;
 }
 
+rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec3 rot, Vec4 col, float r) {
+    RMShape* capsule = new RMShape();
+    capsule->setPosition(pos1);
+    capsule->setRotation(rot);
+    capsule->setColor(col);
+    capsule->setParam1(pos2);
+    capsule->setParam2(Vec3(r, 0, 0));
+    capsule->setType(rm::Box);
+}
+
+
 // Different Operations //
 // Mostly jsut a wrapper around the setOperation function
 

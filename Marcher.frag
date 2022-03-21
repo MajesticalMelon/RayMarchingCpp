@@ -11,6 +11,7 @@ const float PI = 3.14159265359;
 // Shape types
 const int SPHERE = 1;
 const int BOX = 2;
+const int CAPSULE = 3;
 
 // SDF Ops
 const int UNION = 1;
@@ -128,6 +129,13 @@ float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
     return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.);
 }
 
+float capsuleSDF(vec3 p, vec3 pos1, vec3 pos2, vec3 rot, float r) {
+    vec3 pa = rotateXYZ(p - pos1, rot);
+    vec3 ba = rotateXYZ(pos2 - pos1, rot);
+    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
+    return length( pa - ba*h ) - r;
+}
+
 // Shape operations
 Shape combine(Shape s1, Shape s2) {
     Shape returned = s1.signedDistance < s2.signedDistance ? s1 : s2;
@@ -201,6 +209,17 @@ float assignSDF(vec3 p, Shape s) {
             s.position,
             s.rotation,
             s.param1
+        );
+    }
+
+    // Capsule
+    if (s.type == CAPSULE) {
+        return capsuleSDF(
+            p,
+            s.position,
+            s.rotation,
+            s.param1,
+            s.param2.r
         );
     }
 

@@ -28,6 +28,7 @@ namespace rm {
 	enum ShapeType {
 		Invalid,
 		Sphere,
-		Box
+		Box,
+		Capsule
 	};
 }

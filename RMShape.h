@@ -57,5 +57,6 @@ namespace rm {
 
         static RMShape* createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r);
         static RMShape* createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size);
+        static RMShape* createCapsule(Vec3 pos1, Vec3 pos2, Vec3 rot, Vec4 col, float r);
     };
 }

@@ -25,6 +25,7 @@ float rotateScalar = 0.7f;
 rm::RMShape* sphere1;
 rm::RMShape* box1;
 rm::RMShape* sphere2;
+rm::RMShape* line;
 
 // Initilization of global variables
 void init() {
@@ -52,6 +53,12 @@ void init() {
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec4(1, 0, 0, 1),
 		2
+	);
+
+	line = rm::RMShape::createCapsule(
+		sf::Glsl::Vec3(-2, 5, 2),
+		sf::Glsl::Vec3(2, 5, 2),
+		sf::Glsl::Vec3(0, 0, 0)
 	);
 
 	// Form a union of sphere1 and box1
