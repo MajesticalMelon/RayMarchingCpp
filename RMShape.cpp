@@ -117,13 +117,13 @@ void rm::RMShape::setPosition(Vec3 pos) {
 
 // Rotates the shape about the origin (defaults to position)
 void rm::RMShape::setRotation(Vec3 rot) {
-    Vec3 offset = -origin;
+    /*Vec3 offset = -origin;
     position += origin;
     printf("%f\n", origin.x);
     printf("%f\n", offset.x);
     offset = rotateXYZ(-origin, rot);
     printf("%f\n", offset.x);
-    position += offset;
+    position += offset;*/
 
     rotation = rot;
 }

@@ -27,11 +27,26 @@ Vector3f rotateZ(Vector3f p, float theta) {
 }
 
 Vector3f rotateXYZ(Vector3f p, Vector3f rot) {
-	Vector3f rotated = p;
+	
+	Transform trans;
+	priv::Matrix<3, 3> rotation(trans);
 
-	rotated = rotateX(rotated, rot.x);
-	rotated = rotateY(rotated, rot.y);
-	rotated = rotateZ(rotated, rot.z);
+	rotation.array[0] = cos(rot.z) * cos(rot.y);
+	rotation.array[1] = sin(rot.z) * cos(rot.y);
+	rotation.array[2] = -sin(rot.y);
 
-	return rotated;
+	rotation.array[3] = cos(rot.z) * sin(rot.y) * sin(rot.x) - sin(rot.z) * cos(rot.x);
+	rotation.array[4] = sin(rot.z) * sin(rot.y) * sin(rot.x) + cos(rot.z) * cos(rot.x);
+	rotation.array[5] = cos(rot.y) * sin(rot.x);
+
+	rotation.array[6] = cos(rot.z) * sin(rot.y) * cos(rot.x) + sin(rot.z) * sin(rot.x);
+	rotation.array[7] = sin(rot.z) * sin(rot.y) * cos(rot.x) - cos(rot.z) * sin(rot.x);
+	rotation.array[8] = cos(rot.y) * cos(rot.x);
+
+	Vector3f rotatedPoint;
+	rotatedPoint.x = p.x * rotation.array[0] + p.y * rotation.array[3] + p.z * rotation.array[6];
+	rotatedPoint.y = p.x * rotation.array[1] + p.y * rotation.array[4] + p.z * rotation.array[7];
+	rotatedPoint.z = p.x * rotation.array[2] + p.y * rotation.array[5] + p.z * rotation.array[8];
+
+	return rotatedPoint;
 }

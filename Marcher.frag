@@ -23,38 +23,25 @@ const int SMOOTH_SUBTRACT = 6;
 
 vec4 difCol = vec4(0., 0., 0., 1.);
 
-vec3 rotateX(vec3 p, float theta) {
-    return vec3(
-        p.x,
-        p.y * cos(theta) - p.z * sin(theta),
-        p.y * sin(theta) + p.z * cos(theta)
+mat3 rotateXYZ(vec3 rot) {
+    mat3 rotation;
+    rotation[0] = vec3(
+        cos(rot.z) * cos(rot.y),
+        sin(rot.z) * cos(rot.y),
+        -sin(rot.y)
     );
-}
-
-vec3 rotateY(vec3 p, float theta) {
-    return vec3(
-        p.x * cos(theta) + p.z * sin(theta),
-        p.y,
-        -p.x * sin(theta) + p.z * cos(theta)
+    rotation[1] = vec3(
+        cos(rot.z) * sin(rot.y) * sin(rot.x) - sin(rot.z) * cos(rot.x),
+        sin(rot.z) * sin(rot.y) * sin(rot.x) + cos(rot.z) * cos(rot.x),
+        cos(rot.y) * sin(rot.x)
     );
-}
-
-vec3 rotateZ(vec3 p, float theta) {
-    return vec3(
-        p.x * cos(theta) - p.y * sin(theta),
-        p.x * sin(theta) + p.y * cos(theta),
-        p.z
+    rotation[2] = vec3(
+        cos(rot.z) * sin(rot.y) * cos(rot.x) + sin(rot.z) * sin(rot.x),
+        sin(rot.z) * sin(rot.y) * cos(rot.x) - cos(rot.z) * sin(rot.x),
+        cos(rot.y) * cos(rot.x)
     );
-}
 
-vec3 rotateXYZ(vec3 p, vec3 rot) {
-    vec3 rotated = p;
-
-    rotated = rotateX(rotated, rot.x);
-    rotated = rotateY(rotated, rot.y);
-    rotated = rotateZ(rotated, rot.z);
-
-    return rotated;
+    return rotation;
 }
 
 uniform vec2 windowDimensions = vec2(800, 600);
@@ -121,11 +108,11 @@ vec4 smoothColor(float d1, float d2, vec4 a, vec4 b, float k) {
 
 // Signed Distance Fields
 float sphereSDF(vec3 p, vec3 pos, vec3 rot, float r) {
-    return length(rotateXYZ(p - pos, rot)) - r;
+    return length(p) - r;
 }
 
 float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
-    vec3 q = abs(rotateXYZ(p - pos, rot)) - size;
+    vec3 q = abs(p) - size;
     return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.);
 }
 
@@ -195,7 +182,7 @@ float assignSDF(vec3 p, Shape s) {
     // Sphere
     if (s.type == SPHERE) {
         return sphereSDF(
-            p,
+            inverse(rotateXYZ(s.rotation)) * (p - s.position),
             s.position,
             s.rotation,
             s.param1.x
@@ -205,7 +192,7 @@ float assignSDF(vec3 p, Shape s) {
     // Box
     if (s.type == BOX) {
         return boxSDF(
-            p,
+            inverse(rotateXYZ(s.rotation)) * (p - s.position),
             s.position,
             s.rotation,
             s.param1
@@ -406,7 +393,7 @@ vec3 getNormal(vec3 p) {
 vec4 getLight(vec3 p, vec4 color) {
     vec3 lightPos = vec3(p.x, 20., p.z);
     vec3 l = normalize(lightPos - p);
-    l = rotateX(l, cos(time));
+    //l = rotateX(l, cos(time));
 
     vec3 n = getNormal(p);
 
@@ -432,7 +419,7 @@ void main() {
     vec2 uv = (2 * gl_FragCoord.xy - windowDimensions.xy) / windowDimensions.y;
 
     vec3 rd = normalize(vec3(uv.x, uv.y, 1.5));
-    rd = rotateXYZ(rd, camRotation);
+    rd = rotateXYZ(camRotation) * rd;
 
     float dist = RayMarch(camPosition, rd, difCol);
 
