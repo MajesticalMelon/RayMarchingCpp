@@ -65,6 +65,7 @@ void init() {
 
 	// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
+	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
 }
 
 void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {
@@ -104,7 +105,13 @@ void update(sf::Clock* gameClock) {
 	spherePos.x = -1.5 + cos(0.5 * gameTime);
 	sphere1->setPosition(spherePos);
 
-	line->setRotation(Vec3(0, gameTime, 0));
+	box1->setRotation(sf::Glsl::Vec3(
+		box1->getRotation().x,
+		gameTime,
+		box1->getRotation().z
+	));
+
+	line->setRotation(sf::Glsl::Vec3(0, gameTime, 0));
 
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {

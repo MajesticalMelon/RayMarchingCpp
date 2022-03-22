@@ -14,6 +14,7 @@ namespace rm {
         Vec4 color;
         Vec3 param1;
         Vec3 param2;
+        Vec3 origin;
 
         // Used for combining, subtracting, intersecting, etc. two shapes
         int operation;
@@ -37,6 +38,7 @@ namespace rm {
         void setParam1(Vec3 p1);
         void setParam2(Vec3 p2);
         void setVisible(bool visible);
+        void setOrigin(Vec3 orig);
 
         void combine(RMShape* opd);
         void intersection(RMShape* opd);

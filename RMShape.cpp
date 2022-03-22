@@ -1,5 +1,7 @@
 #include "RMShape.h"
 
+#include "Rotations.h"
+
 std::vector<rm::RMShape*> rm::RMShape::shapes;
 
 rm::RMShape::RMShape() {
@@ -8,6 +10,7 @@ rm::RMShape::RMShape() {
     color = Vec4(0, 0, 0, 1);
     param1 = Vec3(0, 0, 0);
     param2 = Vec3(0, 0, 0);
+    origin = Vec3(0, 0, 0);
 
     // Used for combining, subtracting, intersecting, etc. two shapes
     operation = rm::NoOp;
@@ -112,7 +115,16 @@ void rm::RMShape::setPosition(Vec3 pos) {
     position = pos;
 }
 
+// Rotates the shape about the origin (defaults to position)
 void rm::RMShape::setRotation(Vec3 rot) {
+    Vec3 offset = -origin;
+    position += origin;
+    printf("%f\n", origin.x);
+    printf("%f\n", offset.x);
+    offset = rotateXYZ(-origin, rot);
+    printf("%f\n", offset.x);
+    position += offset;
+
     rotation = rot;
 }
 
@@ -140,6 +152,11 @@ void rm::RMShape::setOperation(rm::Operation op, rm::RMShape* opd) {
 
 void rm::RMShape::setVisible(bool visible) {
     checkShape = visible;
+}
+
+// Set the origin of rotation relative to position
+void rm::RMShape::setOrigin(Vec3 orig) {
+    origin = orig;
 }
 
 // Getters //
