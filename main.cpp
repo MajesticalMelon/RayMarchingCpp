@@ -58,7 +58,9 @@ void init() {
 	line = rm::RMShape::createCapsule(
 		sf::Glsl::Vec3(-2, 5, 2),
 		sf::Glsl::Vec3(2, 5, 2),
-		sf::Glsl::Vec3(0, 0, 0)
+		sf::Glsl::Vec3(0, 0, 0),
+		sf::Glsl::Vec4(0.2, 0.69, 0.42, 1),
+		0.5
 	);
 
 	// Form a union of sphere1 and box1
@@ -82,6 +84,8 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 
 	sphere2->draw(shader);
 
+	line->draw(shader);
+
 	// End drawing here
 	window->draw(screen, shader);
 }
@@ -100,7 +104,7 @@ void update(sf::Clock* gameClock) {
 	spherePos.x = -1.5 + cos(0.5 * gameTime);
 	sphere1->setPosition(spherePos);
 
-	box1->setRotation(Vec3(3, gameTime, 0));
+	line->setRotation(Vec3(0, gameTime, 0));
 
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {

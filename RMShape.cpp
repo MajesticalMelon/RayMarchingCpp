@@ -73,7 +73,9 @@ rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec3 rot, Vec4 col
     capsule->setColor(col);
     capsule->setParam1(pos2);
     capsule->setParam2(Vec3(r, 0, 0));
-    capsule->setType(rm::Box);
+    capsule->setType(rm::Capsule);
+
+    return capsule;
 }
 
 

@@ -130,10 +130,10 @@ float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
 }
 
 float capsuleSDF(vec3 p, vec3 pos1, vec3 pos2, vec3 rot, float r) {
-    vec3 pa = rotateXYZ(p - pos1, rot);
-    vec3 ba = rotateXYZ(pos2 - pos1, rot);
+    vec3 pa = p - pos1;
+    vec3 ba = pos2 - pos1;
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
-    return length( pa - ba*h ) - r;
+    return length(pa - ba * h) - r;
 }
 
 // Shape operations
