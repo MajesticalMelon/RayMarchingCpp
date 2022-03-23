@@ -4,7 +4,7 @@ uniform sampler2D texture;
 
 // Constants for the Ray Marching Algorithm
 const float MAX_DISTANCE = 100.;
-const float TOLERANCE = 0.001;
+const float TOLERANCE = 0.0001;
 const int MAX_STEPS = 10000;
 const float PI = 3.14159265359;
 
@@ -387,13 +387,13 @@ vec3 getNormal(vec3 p) {
 }
 
 vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(0, 20., 0);
+    vec3 lightPos = vec3(0, 10., 0);
     vec3 l = normalize(lightPos - p);
-    //l = rotateX(l, cos(time));
+    //l = l * rotateXYZ(vec3(cos(time), 0, 0));
 
     vec3 n = getNormal(p);
 
-    vec3 dif = vec3(clamp(dot(n, l), 0., 1.));
+    vec3 dif = vec3(smoothstep(0., 1., dot(n, l)));
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
