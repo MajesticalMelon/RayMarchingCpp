@@ -69,10 +69,9 @@ rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
     return box;
 }
 
-rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec3 rot, Vec4 col, float r) {
+rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r) {
     RMShape* capsule = new RMShape();
     capsule->setPosition(pos1);
-    capsule->setRotation(rot);
     capsule->setColor(col);
     capsule->setParam1(pos2);
     capsule->setParam2(Vec3(r, 0, 0));
@@ -117,14 +116,6 @@ void rm::RMShape::setPosition(Vec3 pos) {
 
 // Rotates the shape about the origin (defaults to position)
 void rm::RMShape::setRotation(Vec3 rot) {
-    /*Vec3 offset = -origin;
-    position += origin;
-    printf("%f\n", origin.x);
-    printf("%f\n", offset.x);
-    offset = rotateXYZ(-origin, rot);
-    printf("%f\n", offset.x);
-    position += offset;*/
-
     rotation = rot;
 }
 

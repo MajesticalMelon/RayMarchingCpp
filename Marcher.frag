@@ -107,16 +107,16 @@ vec4 smoothColor(float d1, float d2, vec4 a, vec4 b, float k) {
 }
 
 // Signed Distance Fields
-float sphereSDF(vec3 p, vec3 pos, vec3 rot, float r) {
+float sphereSDF(vec3 p, float r) {
     return length(p) - r;
 }
 
-float boxSDF(vec3 p, vec3 pos, vec3 rot, vec3 size) {
+float boxSDF(vec3 p, vec3 size) {
     vec3 q = abs(p) - size;
     return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.);
 }
 
-float capsuleSDF(vec3 p, vec3 pos1, vec3 pos2, vec3 rot, float r) {
+float capsuleSDF(vec3 p, vec3 pos1, vec3 pos2, float r) {
     vec3 pa = p - pos1;
     vec3 ba = pos2 - pos1;
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
@@ -183,8 +183,6 @@ float assignSDF(vec3 p, Shape s) {
     if (s.type == SPHERE) {
         return sphereSDF(
             inverse(rotateXYZ(s.rotation)) * (p - s.position),
-            s.position,
-            s.rotation,
             s.param1.x
         );
     }
@@ -193,8 +191,6 @@ float assignSDF(vec3 p, Shape s) {
     if (s.type == BOX) {
         return boxSDF(
             inverse(rotateXYZ(s.rotation)) * (p - s.position),
-            s.position,
-            s.rotation,
             s.param1
         );
     }
@@ -204,7 +200,6 @@ float assignSDF(vec3 p, Shape s) {
         return capsuleSDF(
             p,
             s.position,
-            s.rotation,
             s.param1,
             s.param2.r
         );

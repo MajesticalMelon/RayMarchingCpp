@@ -16,6 +16,7 @@ int userInput;
 sf::Vector3f position(0, 1, 0);
 sf::Vector3f rotation(0, 0, 0);
 sf::Vector3f look(0, 0, 1);
+sf::Vector3f right(1, 0, 0);
 
 // Camera variables
 float walkScalar = 3;
@@ -57,7 +58,6 @@ void init() {
 
 	line = rm::RMShape::createCapsule(
 		sf::Glsl::Vec3(-2, 5, 2),
-		sf::Glsl::Vec3(2, 5, 2),
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec4(0.2, 0.69, 0.42, 1),
 		0.5
@@ -100,6 +100,7 @@ void update(sf::Clock* gameClock) {
 
 	// Rotate the user's look vector
 	look = rotateXYZ(sf::Vector3f(0, 0, 1), rotation);
+	right = rotateXYZ(sf::Vector3f(1, 0, 0), sf::Vector3f(0, rotation.y, 0));
 
 	sf::Glsl::Vec3 spherePos = sphere1->getPosition();
 	spherePos.x = -1.5 + cos(0.5 * gameTime);
@@ -126,7 +127,7 @@ void update(sf::Clock* gameClock) {
 		}
 
 		if ((userInput & rm::Left) == rm::Left) {
-			position -= sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
+			position -= right * deltaTime * walkScalar;
 		}
 
 		if ((userInput & rm::Back) == rm::Back) {
@@ -134,7 +135,7 @@ void update(sf::Clock* gameClock) {
 		}
 
 		if ((userInput & rm::Right) == rm::Right) {
-			position += sf::Vector3f(look.z, 0, -look.x) * deltaTime * walkScalar;
+			position += right * deltaTime * walkScalar;
 		}
 
 		if ((userInput & rm::Up) == rm::Up) {
