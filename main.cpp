@@ -57,10 +57,10 @@ void init() {
 	);
 
 	line = rm::RMShape::createCapsule(
-		sf::Glsl::Vec3(-2, 5, 2),
+		sf::Glsl::Vec3(-5, 0, 0),
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec4(0.2, 0.69, 0.42, 1),
-		0.5
+		0.1f
 	);
 
 	// Form a union of sphere1 and box1
@@ -107,12 +107,10 @@ void update(sf::Clock* gameClock) {
 	sphere1->setPosition(spherePos);
 
 	box1->setRotation(sf::Glsl::Vec3(
-		box1->getRotation().x,
-		gameTime,
-		box1->getRotation().z
+		0,
+		gameTime / 100,
+		0
 	));
-
-	line->setRotation(sf::Glsl::Vec3(0, gameTime, 0));
 
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {

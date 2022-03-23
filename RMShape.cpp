@@ -117,6 +117,9 @@ void rm::RMShape::setPosition(Vec3 pos) {
 // Rotates the shape about the origin (defaults to position)
 void rm::RMShape::setRotation(Vec3 rot) {
     rotation = rot;
+
+    /*Vec3 offset = position - origin;
+    position = rotateXYZ(offset, rot) + origin;*/
 }
 
 void rm::RMShape::setColor(Vec4 col) {
