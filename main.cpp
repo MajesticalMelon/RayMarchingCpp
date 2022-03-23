@@ -108,7 +108,7 @@ void update(sf::Clock* gameClock) {
 
 	box1->setRotation(sf::Glsl::Vec3(
 		0,
-		gameTime / 100,
+		gameTime,
 		0
 	));
 

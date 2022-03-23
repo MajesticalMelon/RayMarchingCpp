@@ -233,6 +233,7 @@ Shape SceneSDF(vec3 p) {
 
     scene.signedDistance = p.y;
     scene.color = vec4(1, 1, 1, 1);
+    scene.type = 0;
     scene.metallic = 0;
 
     Shape check;
@@ -305,8 +306,8 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         
         if (distTotal > MAX_DISTANCE)
         {
-            if (accCol.a < TOLERANCE) {
-                dCol = vec4(0, 0, 0, 1);
+           if (accCol.a < TOLERANCE) {
+                dCol = vec4(0., 0.9, 1., 1);
                 return distTotal;
             }
 
@@ -386,28 +387,29 @@ vec3 getNormal(vec3 p) {
 }
 
 vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(p.x, 20., p.z);
+    vec3 lightPos = vec3(0, 20., 0);
     vec3 l = normalize(lightPos - p);
     //l = rotateX(l, cos(time));
 
     vec3 n = getNormal(p);
 
-    vec3 dif = vec3(1, 1, 1);
+    vec3 dif = vec3(clamp(dot(n, l), 0., 1.));
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
 
     float dist = lightMarch(p + n * TOLERANCE * 2, l, lightPos, col, hitTransparentObject);
 
-    if (hitTransparentObject) {
-        //col.a *= 0.5;
-        col.rgb += color.rgb * color.a * (1. - col.a);
-        dif *= col.rgb;
-    } else if (dist < length(lightPos - p) && !hitTransparentObject) {
+    if (dist < length(lightPos - p)) {
         dif *= 0.5;
     }
 
-    return vec4(color.rgb * dif, 1.);
+    if (hitTransparentObject) {
+        col.rgb += color.rgb * color.a * (1. - col.a);
+        dif *= col.rgb;
+    }
+
+    return vec4(color.rgb * dif, 1);
 }
 
 void main() {
@@ -422,5 +424,5 @@ void main() {
 
     vec4 col = getLight(pos, difCol);
 
-	gl_FragColor = col * difCol;
+	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
 }
