@@ -387,13 +387,13 @@ vec3 getNormal(vec3 p) {
 }
 
 vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(0, 10., 0);
+    vec3 lightPos = vec3(0, 1., 0);
     vec3 l = normalize(lightPos - p);
     //l = l * rotateXYZ(vec3(cos(time), 0, 0));
 
     vec3 n = getNormal(p);
 
-    vec3 dif = vec3(clamp(0., 1., dot(n, l)));
+    vec3 dif = vec3(clamp(dot(n, l), 0., 1.));
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
