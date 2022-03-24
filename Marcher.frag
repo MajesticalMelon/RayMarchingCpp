@@ -70,6 +70,7 @@ struct Shape {
 
     // material properties
     float metallic;
+    float reflectivity;
 };
 
 struct Sphere {
@@ -89,6 +90,8 @@ uniform int numSpheres = 0;
 
 uniform Box boxes[10];
 uniform int numBoxes = 0;
+
+uniform vec3 lights[2] = { vec3(0, 10., 0), vec3(-5, 2, 3) };
 
 // Copied from https://www.shadertoy.com/view/Ml3Gz8
 float smoothMin(float a, float b, float k) {
@@ -235,6 +238,7 @@ Shape SceneSDF(vec3 p) {
     scene.color = vec4(1, 1, 1, 1);
     scene.type = 0;
     scene.metallic = 0;
+    scene.reflectivity = 0;
 
     Shape check;
 
@@ -261,6 +265,12 @@ Shape SceneSDF(vec3 p) {
         }
 
         scene = CheckScene(scene, check);
+    }
+
+    if (scene.type == BOX) {
+        scene.reflectivity = 0.5;
+    } else {
+        scene.reflectivity = 0;
     }
 
 	return scene;
@@ -386,10 +396,8 @@ vec3 getNormal(vec3 p) {
     return normalize(n);
 }
 
-vec4 getLight(vec3 p, vec4 color) {
-    vec3 lightPos = vec3(0, 1., 0);
+vec4 getLight(vec3 p, vec3 lightPos, vec4 color) {
     vec3 l = normalize(lightPos - p);
-    //l = l * rotateXYZ(vec3(cos(time), 0, 0));
 
     vec3 n = getNormal(p);
 
@@ -409,7 +417,9 @@ vec4 getLight(vec3 p, vec4 color) {
         dif *= col.rgb;
     }
 
-    return vec4(color.rgb * dif, 1);
+    color.rgb *= dif;
+
+    return vec4(color.rgb, 1);
 }
 
 void main() {
@@ -422,7 +432,21 @@ void main() {
 
     vec3 pos = camPosition + rd * dist;
 
-    vec4 col = getLight(pos, difCol);
+    vec4 col = getLight(pos, lights[0], difCol);
+    col += getLight(pos, lights[1], difCol);
+
+    Shape scene = SceneSDF(pos);
+
+    // Calculate reflections
+    if (scene.reflectivity > 0) {
+        vec3 n = getNormal(pos);
+        rd = reflect(rd, n);
+
+        pos += rd * RayMarch(pos + n * TOLERANCE, rd, difCol);
+
+        col *= getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol);
+        col *= scene.reflectivity;
+    }
 
 	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
 }
