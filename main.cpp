@@ -46,7 +46,7 @@ void init() {
 	box1 = rm::RMShape::createBox(
 		sf::Glsl::Vec3(-2, 3, 0),
 		sf::Glsl::Vec3(3, 1, 0),
-		sf::Glsl::Vec4(0, 1, 0.7, 0.2),
+		sf::Glsl::Vec4(0, 1, 0.7, 0.4),
 		sf::Glsl::Vec3(1, 3, 0.2f)
 	);
 

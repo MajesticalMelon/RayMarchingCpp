@@ -325,7 +325,6 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         }
     }
 
-    accCol.a = 1.;
     dCol = accCol;
     return distTotal;
 }
@@ -378,7 +377,6 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
         }
     }
 
-    //accCol.a = 1;
     dCol = accCol;
     return distTotal;
 }
@@ -433,7 +431,7 @@ void main() {
     vec3 pos = camPosition + rd * dist;
 
     vec4 col = getLight(pos, lights[0], difCol);
-    col += getLight(pos, lights[1], difCol);
+    col += getLight(pos, lights[1], col);
 
     Shape scene = SceneSDF(pos);
 
@@ -442,10 +440,11 @@ void main() {
         vec3 n = getNormal(pos);
         rd = reflect(rd, n);
 
-        pos += rd * RayMarch(pos + n * TOLERANCE, rd, difCol);
+        pos += rd * RayMarch(pos + n * TOLERANCE, rd, col);
 
-        col *= getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol);
-        col *= scene.reflectivity;
+        vec4 refCol = getLight(pos, lights[0], col);
+        refCol += getLight(pos, lights[1], refCol);
+        col *= refCol;
     }
 
 	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
