@@ -393,7 +393,7 @@ vec4 getLight(vec3 p, vec4 color) {
 
     vec3 n = getNormal(p);
 
-    vec3 dif = vec3(smoothstep(0., 1., dot(n, l)));
+    vec3 dif = vec3(clamp(0., 1., dot(n, l)));
 
     vec4 col = vec4(0., 0., 0., 1.);
     bool hitTransparentObject;
