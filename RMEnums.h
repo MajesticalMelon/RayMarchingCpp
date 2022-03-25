@@ -29,6 +29,7 @@ namespace rm {
 		Invalid,
 		Sphere,
 		Box,
-		Capsule
+		Capsule,
+		Plane
 	};
 }

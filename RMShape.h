@@ -60,5 +60,7 @@ namespace rm {
         static RMShape* createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r);
         static RMShape* createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size);
         static RMShape* createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r);
+        // Infinite plane defined by its normal vector, n and offset from the origin, h
+        static RMShape* createPlane(Vec3 pos, Vec3 rot, Vec4 col, Vec3 n, float h);
     };
 }

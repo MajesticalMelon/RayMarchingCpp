@@ -28,6 +28,7 @@ rm::RMShape* sphere1;
 rm::RMShape* box1;
 rm::RMShape* sphere2;
 rm::RMShape* line;
+rm::RMShape* ground;
 
 // Initilization of global variables
 void init() {
@@ -64,6 +65,14 @@ void init() {
 		0.1f
 	);
 
+	ground = rm::RMShape::createPlane(
+		sf::Glsl::Vec3(0, 0, 0),
+		sf::Glsl::Vec3(0, 0, 0),
+		sf::Glsl::Vec4(1, 1, 1, 1),
+		sf::Glsl::Vec3(0, 1, 0),
+		0
+	);
+
 	// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
@@ -87,6 +96,8 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 	sphere2->draw(shader);
 
 	line->draw(shader);
+
+	ground->draw(shader);
 
 	// End drawing here
 	window->draw(screen, shader);

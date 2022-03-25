@@ -12,6 +12,7 @@ const float PI = 3.14159265359;
 const int SPHERE = 1;
 const int BOX = 2;
 const int CAPSULE = 3;
+const int PLANE = 4;
 
 // SDF Ops
 const int UNION = 1;
@@ -126,6 +127,11 @@ float capsuleSDF(vec3 p, vec3 pos1, vec3 pos2, float r) {
     return length(pa - ba * h) - r;
 }
 
+float planeSDF(vec3 p, vec3 n, float h) {
+    n = normalize(n);
+    return dot(p, n) + h;
+}
+
 // Shape operations
 Shape combine(Shape s1, Shape s2) {
     Shape returned = s1.signedDistance < s2.signedDistance ? s1 : s2;
@@ -208,6 +214,14 @@ float assignSDF(vec3 p, Shape s) {
         );
     }
 
+    if (s.type == PLANE) {
+        return planeSDF(
+            inverse(rotateXYZ(s.rotation)) * (p - s.position),
+            s.param1,
+            s.param2.x
+        );
+    }
+
     return sdf;
 }
 
@@ -234,7 +248,7 @@ Shape SceneSDF(vec3 p) {
 
     Shape scene;
 
-    scene.signedDistance = p.y;
+    scene.signedDistance = 2 * MAX_DISTANCE;
     scene.color = vec4(1, 1, 1, 1);
     scene.type = 0;
     scene.metallic = 0;
@@ -316,11 +330,6 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         
         if (distTotal > MAX_DISTANCE)
         {
-           if (accCol.a < TOLERANCE) {
-                dCol = vec4(0., 0.9, 1., 1);
-                return distTotal;
-            }
-
             break;
         }
     }
@@ -431,7 +440,7 @@ void main() {
     vec3 pos = camPosition + rd * dist;
 
     vec4 col = getLight(pos, lights[0], difCol);
-    col += getLight(pos, lights[1], col);
+    col += getLight(pos, lights[1], difCol);
 
     Shape scene = SceneSDF(pos);
 
@@ -443,8 +452,8 @@ void main() {
         pos += rd * RayMarch(pos + n * TOLERANCE, rd, col);
 
         vec4 refCol = getLight(pos, lights[0], col);
-        refCol += getLight(pos, lights[1], refCol);
-        col *= refCol;
+        refCol += getLight(pos, lights[1], col);
+        col *= refCol * scene.reflectivity;
     }
 
 	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);

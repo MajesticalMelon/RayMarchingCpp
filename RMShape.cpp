@@ -80,6 +80,17 @@ rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r)
     return capsule;
 }
 
+rm::RMShape* rm::RMShape::createPlane(Vec3 pos, Vec3 rot, Vec4 col, Vec3 n, float h) {
+    RMShape* plane = new RMShape();
+    plane->setPosition(pos);
+    plane->setRotation(rot);
+    plane->setColor(col);
+    plane->setParam1(n);
+    plane->setParam2(Vec3(h, 0, 0));
+    plane->setType(rm::Plane);
+
+    return plane;
+}
 
 // Different Operations //
 // Mostly jsut a wrapper around the setOperation function
