@@ -282,7 +282,7 @@ Shape SceneSDF(vec3 p) {
     }
 
     if (scene.type == BOX) {
-        scene.reflectivity = 1;
+        scene.reflectivity = 0.1;
     } else {
         scene.reflectivity = 0;
     }
@@ -291,10 +291,12 @@ Shape SceneSDF(vec3 p) {
 }
 
 // Used for traversing through the scene until a solid object is hit
-float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
+float RayMarch(vec3 ro, vec3 rd, out vec4 dCol, out float nearest) {
 	float distTotal = 0.;
 
     vec4 accCol = vec4(0.);
+
+    nearest = MAX_DISTANCE;
     
     for (int i = 0; i < MAX_STEPS; i++)
     {   
@@ -308,6 +310,9 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
         // Check if the ray has hit
         if (dist < TOLERANCE)
         {
+            // Should only save the first time this statement is run
+            nearest = min(distTotal, nearest);
+
             accCol.rgb += scene.color.rgb * scene.color.a * (1. - accCol.a);
 
             accCol.a += scene.color.a * (1. - accCol.a);
@@ -389,37 +394,6 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
     return distTotal;
 }
 
-// Traverse through the scene until any object is hit
-float reflectionMarch(vec3 ro, vec3 rd) {
-	float distTotal = 0.;
-    
-    for (int i = 0; i < MAX_STEPS; i++)
-    {   
-        // March away from origin
-        vec3 p = ro + rd * distTotal;
-        
-        // Get distance to the scene
-        Shape scene = SceneSDF(p);
-        float dist = scene.signedDistance;
-
-        // Check if the ray has hit
-        if (dist < TOLERANCE)
-        {
-            return distTotal;
-        }
-        
-        // Update travelled distance if no hit
-        distTotal += abs(dist);
-        
-        if (distTotal > MAX_DISTANCE)
-        {
-            break;
-        }
-    }
-
-    return distTotal;
-}
-
 vec3 getNormal(vec3 p) {
     float dist = SceneSDF(p).signedDistance;
     vec2 e = vec2(TOLERANCE, 0);
@@ -456,7 +430,7 @@ vec4 getLight(vec3 p, vec3 lightPos, vec4 color) {
 
     color.rgb *= dif;
 
-    return vec4(color.rgb, 1);
+    return color;
 }
 
 void main() {
@@ -465,24 +439,24 @@ void main() {
     vec3 rd = normalize(vec3(uv.x, uv.y, 1.5));
     rd = rotateXYZ(camRotation) * rd;
 
-    float dist = RayMarch(camPosition, rd, difCol);
-    float nearest = reflectionMarch(camPosition, rd);
+    float nearest;
+    float dist = RayMarch(camPosition, rd, difCol, nearest);
 
     vec3 pos = camPosition + rd * dist;
     vec3 nearestPos = camPosition + rd * nearest;
 
-    vec4 col = clamp(getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol), 0., 1.);
+    vec4 col = getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol);
 
-    Shape scene = SceneSDF(pos);
+    Shape scene = SceneSDF(nearestPos);
 
     // Calculate reflections
     if (scene.reflectivity > 0) {
         vec3 n = getNormal(nearestPos);
         rd = reflect(rd, n);
 
-        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, col);
+        vec4 refCol;
+        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
 
-        vec4 refCol = clamp(getLight(nearestPos, lights[0], difCol) + getLight(nearestPos, lights[1], difCol), 0., 1.);
         col += refCol * scene.reflectivity;
     }
 
