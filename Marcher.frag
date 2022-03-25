@@ -282,7 +282,7 @@ Shape SceneSDF(vec3 p) {
     }
 
     if (scene.type == BOX) {
-        scene.reflectivity = 0.5;
+        scene.reflectivity = 1;
     } else {
         scene.reflectivity = 0;
     }
@@ -333,7 +333,6 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
             break;
         }
     }
-
     dCol = accCol;
     return distTotal;
 }
@@ -390,6 +389,37 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
     return distTotal;
 }
 
+// Traverse through the scene until any object is hit
+float reflectionMarch(vec3 ro, vec3 rd) {
+	float distTotal = 0.;
+    
+    for (int i = 0; i < MAX_STEPS; i++)
+    {   
+        // March away from origin
+        vec3 p = ro + rd * distTotal;
+        
+        // Get distance to the scene
+        Shape scene = SceneSDF(p);
+        float dist = scene.signedDistance;
+
+        // Check if the ray has hit
+        if (dist < TOLERANCE)
+        {
+            return distTotal;
+        }
+        
+        // Update travelled distance if no hit
+        distTotal += abs(dist);
+        
+        if (distTotal > MAX_DISTANCE)
+        {
+            break;
+        }
+    }
+
+    return distTotal;
+}
+
 vec3 getNormal(vec3 p) {
     float dist = SceneSDF(p).signedDistance;
     vec2 e = vec2(TOLERANCE, 0);
@@ -436,24 +466,24 @@ void main() {
     rd = rotateXYZ(camRotation) * rd;
 
     float dist = RayMarch(camPosition, rd, difCol);
+    float nearest = reflectionMarch(camPosition, rd);
 
     vec3 pos = camPosition + rd * dist;
+    vec3 nearestPos = camPosition + rd * nearest;
 
-    vec4 col = getLight(pos, lights[0], difCol);
-    col += getLight(pos, lights[1], difCol);
+    vec4 col = clamp(getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol), 0., 1.);
 
     Shape scene = SceneSDF(pos);
 
     // Calculate reflections
     if (scene.reflectivity > 0) {
-        vec3 n = getNormal(pos);
+        vec3 n = getNormal(nearestPos);
         rd = reflect(rd, n);
 
-        pos += rd * RayMarch(pos + n * TOLERANCE, rd, col);
+        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, col);
 
-        vec4 refCol = getLight(pos, lights[0], col);
-        refCol += getLight(pos, lights[1], col);
-        col *= refCol * scene.reflectivity;
+        vec4 refCol = clamp(getLight(nearestPos, lights[0], difCol) + getLight(nearestPos, lights[1], difCol), 0., 1.);
+        col += refCol * scene.reflectivity;
     }
 
 	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
