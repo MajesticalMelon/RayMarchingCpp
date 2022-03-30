@@ -45,4 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="testTexture.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

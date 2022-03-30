@@ -27,6 +27,11 @@ int main() {
 	// Send initial size to shader
 	rayMarchingShader.setUniform("windowDimensions", window.getView().getSize());
 
+	// Load texture
+	Texture testTexture;
+	testTexture.loadFromFile("testTexture.jpg");
+	rayMarchingShader.setUniform("testTexture", testTexture);
+
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
 	RectangleShape screen(Vector2f(window.getSize().x, window.getSize().y));

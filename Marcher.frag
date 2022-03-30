@@ -1,6 +1,7 @@
 #version 150
 
 uniform sampler2D texture;
+uniform sampler2D testTexture;
 
 // Constants for the Ray Marching Algorithm
 const float MAX_DISTANCE = 100.;
@@ -433,6 +434,21 @@ vec4 getLight(vec3 p, vec3 lightPos, vec4 color) {
     return color;
 }
 
+vec4 textureMapping(vec3 p) {
+    Shape current = SceneSDF(p);
+
+    vec3 fromPos = p - current.position;
+
+    vec2 uv;
+    uv.x = fromPos.x;// + normalize(fromPos.z) + 2.) / 4.;
+    uv.y = fromPos.y;// + 1.) / 2.;
+    //uv.z = 0;
+
+    vec4 tex = texture2D(testTexture, uv);
+
+    return tex;
+}
+
 void main() {
     vec2 uv = (2 * gl_FragCoord.xy - windowDimensions.xy) / windowDimensions.y;
 
@@ -450,15 +466,15 @@ void main() {
     Shape scene = SceneSDF(nearestPos);
 
     // Calculate reflections
-    if (scene.reflectivity > 0) {
-        vec3 n = getNormal(nearestPos);
-        rd = reflect(rd, n);
-
-        vec4 refCol;
-        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
-
-        col += refCol * scene.reflectivity;
-    }
+//    if (scene.reflectivity > 0) {
+//        vec3 n = getNormal(nearestPos);
+//        rd = reflect(rd, n);
+//
+//        vec4 refCol;
+//        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
+//
+//        col += refCol * scene.reflectivity;
+//    }
 
 	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
 }
