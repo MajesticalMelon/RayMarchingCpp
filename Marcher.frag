@@ -64,6 +64,7 @@ struct Shape {
     vec3 param2;
 
     // Used for combining, subtracting, intersecting, etc. two shapes
+    int index;
     int operation;
     int operandIndex;
     bool checkShape;
@@ -86,12 +87,7 @@ struct Box {
 };
 
 uniform Shape shapes[20];
-
-uniform Sphere spheres[10];
-uniform int numSpheres = 0;
-
-uniform Box boxes[10];
-uniform int numBoxes = 0;
+uniform sampler2D textures[20];
 
 uniform vec3 lights[2] = { vec3(0, 10., 0), vec3(-5, 2, 3) };
 
@@ -438,9 +434,11 @@ vec4 textureMapping(vec3 p) {
     Shape current = SceneSDF(p);
 
     vec3 fromPos = p - current.position;
+    float rotY = atan(fromPos.z, fromPos.x);
+
     fromPos *= rotateXYZ(current.rotation);
     fromPos = normalize(fromPos);
-    vec2 uv = vec2(mod(fromPos.x, 1), mod(fromPos.y, 1));
+    vec2 uv = vec2(mod((rotY + current.rotation.y) / (2 * PI), 1), mod(fromPos.y, 1));
     //uv *= rotateXYZ(current.rotation);
 
     vec4 tex = texture2D(testTexture, uv);
