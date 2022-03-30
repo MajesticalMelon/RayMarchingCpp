@@ -125,6 +125,12 @@ void update(sf::Clock* gameClock) {
 		0
 	));
 
+	sphere2->setRotation(sf::Glsl::Vec3(
+		0,
+		gameTime,
+		0
+	));
+
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {
 

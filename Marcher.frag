@@ -438,11 +438,10 @@ vec4 textureMapping(vec3 p) {
     Shape current = SceneSDF(p);
 
     vec3 fromPos = p - current.position;
-
-    vec2 uv;
-    uv.x = fromPos.x;// + normalize(fromPos.z) + 2.) / 4.;
-    uv.y = fromPos.y;// + 1.) / 2.;
-    //uv.z = 0;
+    fromPos *= rotateXYZ(current.rotation);
+    fromPos = normalize(fromPos);
+    vec2 uv = vec2(mod(fromPos.x, 1), mod(fromPos.y, 1));
+    //uv *= rotateXYZ(current.rotation);
 
     vec4 tex = texture2D(testTexture, uv);
 
@@ -476,5 +475,5 @@ void main() {
 //        col += refCol * scene.reflectivity;
 //    }
 
-	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
+	gl_FragColor = vec4(textureMapping(pos).rgb * difCol.rgb, 1.);
 }
