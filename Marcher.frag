@@ -466,15 +466,15 @@ void main() {
     Shape scene = SceneSDF(nearestPos);
 
     // Calculate reflections
-//    if (scene.reflectivity > 0) {
-//        vec3 n = getNormal(nearestPos);
-//        rd = reflect(rd, n);
-//
-//        vec4 refCol;
-//        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
-//
-//        col += refCol * scene.reflectivity;
-//    }
+    if (scene.reflectivity > 0) {
+        vec3 n = getNormal(nearestPos);
+        rd = reflect(rd, n);
+
+        vec4 refCol;
+        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
+
+        col += refCol * scene.reflectivity;
+    }
 
 	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
 }
