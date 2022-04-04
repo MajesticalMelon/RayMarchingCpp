@@ -1,7 +1,7 @@
 #version 150
 
 uniform sampler2D texture;
-uniform sampler2D testTexture;
+uniform sampler2D emptyTexture;
 
 // Constants for the Ray Marching Algorithm
 const float MAX_DISTANCE = 100.;
@@ -430,21 +430,34 @@ vec4 getLight(vec3 p, vec3 lightPos, vec4 color) {
     return color;
 }
 
-vec4 textureMapping(vec3 p) {
+vec4 sphereicalMapping(vec3 p) {
     Shape current = SceneSDF(p);
 
+    // U coord determined by rotation about shape's y-axis
     vec3 fromPos = p - current.position;
     float rotY = atan(fromPos.z, fromPos.x);
 
+    rotY *= 2; // Scales the texture
+
+    // V coord determined by y value scaled to be between 0 and 1
     fromPos *= rotateXYZ(current.rotation);
     fromPos = normalize(fromPos);
-    vec2 uv = vec2(mod((rotY + current.rotation.y) / (2 * PI), 1), mod(fromPos.y, 1));
+    fromPos = (fromPos + 1) / 2.;
+
+    fromPos *= 2;// Scales the texture
+
+    vec2 uv = vec2(
+        mod((rotY + current.rotation.y) / (2 * PI), 1), 
+        mod(fromPos.y, 1)
+    );
     //uv *= rotateXYZ(current.rotation);
 
-    vec4 tex = texture2D(testTexture, uv);
+    vec4 tex = texture2D(emptyTexture, uv);
 
     return tex;
 }
+
+//vec4 planarMapping
 
 void main() {
     vec2 uv = (2 * gl_FragCoord.xy - windowDimensions.xy) / windowDimensions.y;
@@ -463,15 +476,17 @@ void main() {
     Shape scene = SceneSDF(nearestPos);
 
     // Calculate reflections
-//    if (scene.reflectivity > 0) {
-//        vec3 n = getNormal(nearestPos);
-//        rd = reflect(rd, n);
-//
-//        vec4 refCol;
-//        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
-//
-//        col += refCol * scene.reflectivity;
-//    }
+    if (scene.reflectivity > 0) {
+        vec3 n = getNormal(nearestPos);
+        rd = reflect(rd, n);
 
-	gl_FragColor = vec4(textureMapping(pos).rgb * difCol.rgb, 1.);
+        vec4 refCol;
+        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
+
+        col += refCol * scene.reflectivity;
+    }
+
+    col.rgb *= sphereicalMapping(pos).rgb;
+
+	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
 }

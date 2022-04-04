@@ -28,9 +28,9 @@ int main() {
 	rayMarchingShader.setUniform("windowDimensions", window.getView().getSize());
 
 	// Load texture
-	Texture testTexture;
-	testTexture.loadFromFile("testTexture.jpg");
-	rayMarchingShader.setUniform("testTexture", testTexture);
+	Texture emptyTexture;
+	emptyTexture.loadFromFile("emptyTexture.png");
+	rayMarchingShader.setUniform("emptyTexture", emptyTexture);
 
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes

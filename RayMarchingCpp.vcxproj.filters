@@ -46,7 +46,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="testTexture.jpg">
+    <Image Include="emptyTexture.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
