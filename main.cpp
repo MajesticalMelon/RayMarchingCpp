@@ -29,6 +29,7 @@ rm::RMShape* box1;
 rm::RMShape* sphere2;
 rm::RMShape* line;
 rm::RMShape* ground;
+rm::RMShape* cutoff;
 
 // Initilization of global variables
 void init() {
@@ -65,6 +66,14 @@ void init() {
 		0.1f
 	);
 
+	cutoff = rm::RMShape::createPlane(
+		line->getPosition(),
+		sf::Glsl::Vec3(0, 0, 0),
+		sf::Glsl::Vec4(0.2, 0.1, 0.7, 1),
+		sf::Glsl::Vec3(0.1, 0.5, 0.3),
+		1
+	);
+
 	ground = rm::RMShape::createPlane(
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec3(0, 0, 0),
@@ -76,6 +85,8 @@ void init() {
 	// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
+
+	line->smoothSubtract(cutoff);
 }
 
 void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {

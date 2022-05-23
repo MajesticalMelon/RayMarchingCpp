@@ -126,7 +126,7 @@ float capsuleSDF(vec3 p, vec3 pos1, vec3 pos2, float r) {
 
 float planeSDF(vec3 p, vec3 n, float h) {
     n = normalize(n);
-    return dot(p, n) + h;
+    return dot(p, n) - h;
 }
 
 // Shape operations
@@ -211,6 +211,7 @@ float assignSDF(vec3 p, Shape s) {
         );
     }
 
+    // Plane
     if (s.type == PLANE) {
         return planeSDF(
             inverse(rotateXYZ(s.rotation)) * (p - s.position),
@@ -366,7 +367,6 @@ float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTra
             if (scene.color.a <= 1 - TOLERANCE) {
                 // Add more to the distance to get it through the object
                 distTotal += TOLERANCE;
-
                 hitTransparentObject = true;
             }
 
@@ -471,7 +471,7 @@ void main() {
     vec3 pos = camPosition + rd * dist;
     vec3 nearestPos = camPosition + rd * nearest;
 
-    vec4 col = getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol);
+    vec4 col = (getLight(pos, lights[0], difCol) * vec4(0.1, 0, 0, 1)) + getLight(pos, lights[1], difCol) * vec4(0, 0, 0.2, 1);
 
     Shape scene = SceneSDF(nearestPos);
 
