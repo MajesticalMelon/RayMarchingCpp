@@ -17,7 +17,7 @@ static struct VerletSolver {
 	}
 
 	static void applyGravity() {
-		const Vector3f GRAVITY = { 0, 0, 0.9f };
+		const Vector3f GRAVITY = { 0, -1.2f, 0 };
 		for (VerletObject* vo : VerletObject::verletObjects) {
 			vo->accelerate(GRAVITY);
 		}

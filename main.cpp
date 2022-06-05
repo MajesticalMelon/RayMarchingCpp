@@ -57,7 +57,7 @@ void init() {
 	);
 
 	sphere2 = rm::RMShape::createSphere(
-		sf::Glsl::Vec3(0, 3, 5),
+		sf::Glsl::Vec3(0, 15, 5),
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec4(1, 0, 0, 1),
 		2
@@ -132,6 +132,7 @@ void update(sf::Clock* gameClock) {
 		0
 	));
 
+	// Physics updates
 	VerletSolver::update(deltaTime);
 
 	sphere2->setPosition(testSphere->getPosition());
