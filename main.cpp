@@ -6,6 +6,8 @@
 #include "RMShape.h"
 #include "RMEnums.h"
 #include "Rotations.h"
+#include "VerletObject.h"
+#include "VerletSolver.h"
 
 // Global variables
 float gameTime;
@@ -29,6 +31,9 @@ rm::RMShape* box1;
 rm::RMShape* sphere2;
 rm::RMShape* line;
 rm::RMShape* ground;
+
+// Verlet Objects
+VerletObject* testSphere;
 
 // Initilization of global variables
 void init() {
@@ -76,6 +81,8 @@ void init() {
 	// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
+
+	testSphere = new VerletObject(sphere2->getPosition());
 }
 
 void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {
@@ -124,6 +131,10 @@ void update(sf::Clock* gameClock) {
 		gameTime,
 		0
 	));
+
+	VerletSolver::update(deltaTime);
+
+	sphere2->setPosition(testSphere->getPosition());
 
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {

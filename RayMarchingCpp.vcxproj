@@ -23,6 +23,8 @@
     <ClCompile Include="RMShape.cpp" />
     <ClCompile Include="Rotations.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="VerletObject.cpp" />
+    <ClCompile Include="VerletObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Marcher.frag" />
@@ -32,6 +34,7 @@
     <ClInclude Include="Rotations.h" />
     <ClInclude Include="RMShape.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="VerletSolver.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="testTexture.jpg" />

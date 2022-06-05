@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\RayMarch">
+      <UniqueIdentifier>{48159a08-b80a-440f-b178-7dc5e246e831}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Verlet">
+      <UniqueIdentifier>{6aa91a9e-0498-4305-9aa6-9f9eee6a6f36}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="run.cpp">
@@ -27,22 +33,31 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VerletObject.h">
+      <Filter>Header Files\Verlet</Filter>
+    </ClCompile>
+    <ClCompile Include="VerletObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Marcher.frag" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RMShape.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Rotations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RMEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RMEnums.h">
+      <Filter>Header Files\RayMarch</Filter>
+    </ClInclude>
+    <ClInclude Include="RMShape.h">
+      <Filter>Header Files\RayMarch</Filter>
+    </ClInclude>
+    <ClInclude Include="VerletSolver.h">
+      <Filter>Header Files\Verlet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
