@@ -21,6 +21,9 @@ rm::RMShape::RMShape() {
     index = rm::RMShape::shapes.size();
     type = rm::Invalid; // Default to sphere because there is no 'null' shape
 
+    // Determine SDF function
+    assignSDF();
+
     // Save this shape
     rm::RMShape::shapes.push_back(this);
 }
@@ -55,6 +58,9 @@ rm::RMShape* rm::RMShape::createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r) {
     sphere->setParam1(Vec3(r, 0, 0));
     sphere->setType(rm::Sphere);
 
+    // Determine SDF function
+    sphere->assignSDF();
+
     return sphere;
 }
 
@@ -65,6 +71,9 @@ rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
     box->setColor(col);
     box->setParam1(size);
     box->setType(rm::Box);
+
+    // Determine SDF function
+    box->assignSDF();
 
     return box;
 }
@@ -77,6 +86,9 @@ rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r)
     capsule->setParam2(Vec3(r, 0, 0));
     capsule->setType(rm::Capsule);
 
+    // Determine SDF function
+    capsule->assignSDF();
+
     return capsule;
 }
 
@@ -88,6 +100,9 @@ rm::RMShape* rm::RMShape::createPlane(Vec3 pos, Vec3 rot, Vec4 col, Vec3 n, floa
     plane->setParam1(n);
     plane->setParam2(Vec3(h, 0, 0));
     plane->setType(rm::Plane);
+
+    // Determine SDF function
+    plane->assignSDF();
 
     return plane;
 }
@@ -192,4 +207,9 @@ rm::ShapeType rm::RMShape::getType() {
 
 int rm::RMShape::getIndex() {
     return index;
+}
+
+float rm::RMShape::getSignedDistance(Vec3 p)
+{
+    return signedDistance(p);
 }

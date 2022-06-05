@@ -34,6 +34,7 @@ rm::RMShape* ground;
 
 // Verlet Objects
 VerletObject* testSphere;
+VerletObject* testPlane;
 
 // Initilization of global variables
 void init() {
@@ -82,7 +83,10 @@ void init() {
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
 
-	testSphere = new VerletObject(sphere2->getPosition());
+	testSphere = new VerletObject(sphere2);
+	testPlane = new VerletObject(ground);
+
+	printf("%f\n", box1->getSignedDistance(Vec3()));
 }
 
 void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {
@@ -135,7 +139,7 @@ void update(sf::Clock* gameClock) {
 	// Physics updates
 	VerletSolver::update(deltaTime);
 
-	sphere2->setPosition(testSphere->getPosition());
+	//sphere2->setPosition(testSphere->getPosition());
 
 	// Check userInput
 	if ((userInput | rm::None) != rm::None) {

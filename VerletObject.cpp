@@ -8,6 +8,19 @@ VerletObject::VerletObject(Vector3f pos)
 	positionOld = pos;
 	velocity = Vector3f();
 	acceleration = Vector3f();
+	// Default collider is a sphere
+	collider = rm::RMShape::createSphere(pos, { 0, 0, 0 }, { 1, 0, 0, 1 }, 1);
+
+	verletObjects.push_back(this);
+}
+
+VerletObject::VerletObject(rm::RMShape* shape)
+{
+	positionCurrent = shape->getPosition();
+	positionOld = positionCurrent;
+	velocity = Vector3f();
+	acceleration = Vector3f();
+	collider = shape;
 
 	verletObjects.push_back(this);
 }
@@ -28,6 +41,9 @@ void VerletObject::update(float deltaTime)
 	// Update position
 	positionCurrent = positionCurrent + velocity + acceleration * deltaTime * deltaTime;
 	acceleration = Vector3f(); // Reset acceleration
+
+	// Update collider
+	collider->setPosition(positionCurrent);
 }
 
 void VerletObject::accelerate(Vector3f acc)

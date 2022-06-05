@@ -60,7 +60,7 @@ namespace rm {
         rm::ShapeType getType();
         int getIndex();
 
-        const rm::SDF getSignedDistance = signedDistance;
+        float getSignedDistance(Vec3 p);
 
         static std::vector<RMShape*> shapes;
 
@@ -100,26 +100,26 @@ namespace rm {
             p /= length(p);
         }
 
-        void assignSDF() {
+        rm::SDF assignSDF() {
             switch (type) {
             case rm::Invalid:
-                signedDistance = (SDF) & [](Vec3 p) {
+                signedDistance = (SDF&) [](Vec3 p) -> Vec3 {
                     return Vec3();
                 };
                 break;
             case rm::Sphere:
-                signedDistance = (SDF) & [this](Vec3 p) {
+                signedDistance = (SDF&) [this](Vec3 p) {
                     return length(p) - param1.x;
                 };
                 break;
             case rm::Box:
-                signedDistance = (SDF) & [this](Vec3 p) {
+                signedDistance = (SDF&)  [this](Vec3 p) {
                     Vec3 q = Vec3(abs(p.x), abs(p.y), abs(p.z)) - param1;
                     return length(vectorMax(q, Vec3(0, 0, 0))) + fmin(fmax(q.x, fmax(q.y, q.z)), 0.);
                 };
                 break;
             case rm::Capsule:
-                signedDistance = (SDF) & [this](Vec3 p) {
+                signedDistance = (SDF&) [this](Vec3 p) {
                     Vec3 pa = p - position;
                     Vec3 ba = param1 - position;
                     float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
@@ -127,14 +127,16 @@ namespace rm {
                 };
                 break;
             case rm::Plane:
-                signedDistance = (SDF) & [this](Vec3 p) {
+                return (SDF&) [this](Vec3 p) {
                     Vec3 n = normalize(param1);
                     return dot(p, n) + param2.x;
                 };
                 break;
             default:
-
+                break;
             }
+
+            printf("%f\n", signedDistance(Vec3()));
         }
     };
 }
