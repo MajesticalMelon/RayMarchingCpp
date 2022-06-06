@@ -72,6 +72,7 @@ namespace rm {
 
     // Helper functions
     private:
+#pragma region VectorHelpers
         float length(Vec3 p) {
             return sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
         }
@@ -80,7 +81,7 @@ namespace rm {
             return Vec3(abs(p.x), abs(p.y), abs(p.z));
         }
 
-        Vec3 vectorMax (Vec3 p, Vec3 q) {
+        Vec3 vectorMax(Vec3 p, Vec3 q) {
             return Vec3(fmax(p.x, q.x), fmax(p.y, q.y), fmax(p.z, q.z));
         }
 
@@ -96,19 +97,41 @@ namespace rm {
             return fmax(fmin(val, high), low);
         }
 
-        Vec3 normalize(Vec3 &p) {
+        Vec3 normalize(Vec3& p) {
             p /= length(p);
         }
+#pragma endregion
+
+#pragma region SDFs
+        // SDFs
+        float invalidSDF(Vec3 p) {
+            return 0.f;
+        }
+
+        float sphereSDF(Vec3 p) {
+            return length(p) - param1.x;
+        }
+
+        float boxSDF(Vec3 p) {
+
+        }
+
+        float capsuleSDF(Vec3 p) {
+
+        }
+
+        float planeSDF(Vec3 p) {
+
+        }
+#pragma endregion
 
         rm::SDF assignSDF() {
             switch (type) {
             case rm::Invalid:
-                signedDistance = (SDF&) [](Vec3 p) -> Vec3 {
-                    return Vec3();
-                };
+                signedDistance = invalidSDF;
                 break;
             case rm::Sphere:
-                signedDistance = (SDF&) [this](Vec3 p) {
+                signedDistance = (SDF&) [this](Vec3 p) -> float{
                     return length(p) - param1.x;
                 };
                 break;
