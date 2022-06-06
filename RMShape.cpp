@@ -2,6 +2,35 @@
 
 #include "Rotations.h"
 
+float rm::VectorHelper::length(Vec3 p) {
+    return sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
+}
+
+Vec3 rm::VectorHelper::vectorAbs(Vec3 p) {
+    return Vec3(abs(p.x), abs(p.y), abs(p.z));
+}
+
+Vec3 rm::VectorHelper::vectorMax(Vec3 p, Vec3 q) {
+    return Vec3(fmax(p.x, q.x), fmax(p.y, q.y), fmax(p.z, q.z));
+}
+
+Vec3 rm::VectorHelper::vectorMin(Vec3 p, Vec3 q) {
+    return Vec3(fmin(p.x, q.x), fmin(p.y, q.y), fmin(p.z, q.z));
+}
+
+float rm::VectorHelper::dot(Vec3 p, Vec3 q) {
+    return p.x * q.x + p.y * q.y + p.y * q.y;
+}
+
+float rm::VectorHelper::clamp(float val, float low, float high) {
+    return fmax(fmin(val, high), low);
+}
+
+Vec3 rm::VectorHelper::normalize(Vec3& p) {
+    p /= length(p);
+    return p;
+}
+
 std::vector<rm::RMShape*> rm::RMShape::shapes;
 
 rm::RMShape::RMShape() {
@@ -19,10 +48,7 @@ rm::RMShape::RMShape() {
 
     // Keeping track of the shape
     index = rm::RMShape::shapes.size();
-    type = rm::Invalid; // Default to sphere because there is no 'null' shape
-
-    // Determine SDF function
-    assignSDF();
+    type = rm::Invalid; // Doesn't get drawn
 
     // Save this shape
     rm::RMShape::shapes.push_back(this);
@@ -58,9 +84,6 @@ rm::RMShape* rm::RMShape::createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r) {
     sphere->setParam1(Vec3(r, 0, 0));
     sphere->setType(rm::Sphere);
 
-    // Determine SDF function
-    sphere->assignSDF();
-
     return sphere;
 }
 
@@ -71,9 +94,6 @@ rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
     box->setColor(col);
     box->setParam1(size);
     box->setType(rm::Box);
-
-    // Determine SDF function
-    box->assignSDF();
 
     return box;
 }
@@ -86,9 +106,6 @@ rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r)
     capsule->setParam2(Vec3(r, 0, 0));
     capsule->setType(rm::Capsule);
 
-    // Determine SDF function
-    capsule->assignSDF();
-
     return capsule;
 }
 
@@ -100,9 +117,6 @@ rm::RMShape* rm::RMShape::createPlane(Vec3 pos, Vec3 rot, Vec4 col, Vec3 n, floa
     plane->setParam1(n);
     plane->setParam2(Vec3(h, 0, 0));
     plane->setType(rm::Plane);
-
-    // Determine SDF function
-    plane->assignSDF();
 
     return plane;
 }
@@ -211,5 +225,44 @@ int rm::RMShape::getIndex() {
 
 float rm::RMShape::getSignedDistance(Vec3 p)
 {
-    return signedDistance(p);
+    float signedDistance;
+
+    switch (type) {
+    case rm::Invalid:
+        signedDistance = 0.f;
+        break;
+
+    case rm::Sphere:
+        signedDistance = VectorHelper::length(p) - param1.x;
+        break;
+
+    case rm::Box:
+    {
+        Vec3 q = Vec3(abs(p.x), abs(p.y), abs(p.z)) - param1;
+        signedDistance = VectorHelper::length(VectorHelper::vectorMax(q, Vec3(0, 0, 0))) + fmin(fmax(q.x, fmax(q.y, q.z)), 0.);
+    }
+        break;
+
+    case rm::Capsule:
+    {
+        Vec3 pa = p - position;
+        Vec3 ba = param1 - position;
+        float h = VectorHelper::clamp(VectorHelper::dot(pa, ba) / VectorHelper::dot(ba, ba), 0.0, 1.0);
+        signedDistance = VectorHelper::length(pa - ba * h) - param2.x;
+    }
+        break;
+
+    case rm::Plane:
+    {
+        Vec3 n = VectorHelper::normalize(param1);
+        signedDistance = VectorHelper::dot(p, n) + param2.x;
+    }
+        break;
+
+    default:
+        signedDistance = 0.f;
+        break;
+    }
+
+    return signedDistance;
 }
