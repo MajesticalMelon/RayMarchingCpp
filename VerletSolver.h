@@ -50,18 +50,17 @@ static struct VerletSolver {
 			{0, 0, *offset}, {0, 0, -*offset}
 		};
 		while (minDist > 0.01f) {
-			float checkDist = INFINITY;
 			for (int i = 0; i < 6; i++) {
+				// TODO: Break out of loop if all points are outside of shape
+
 				// Make sure the check point is within the shape
 				if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > 0.01f) continue;
 
 				// Find the closest check point
-				checkDist = fmin(checkDist, s2.getSignedDistance(s1.getPosition() + offsets[i]));
+				minDist = fmin(minDist, s2.getSignedDistance(s1.getPosition() + offsets[i]));
 			}
 
-			minDist = checkDist;
-
-			printf("%f\n", *offset);
+			printf("%f\n", offsets[0].x);
 		}
 
 		return true;
