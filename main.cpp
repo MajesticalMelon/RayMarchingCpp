@@ -31,29 +31,31 @@ rm::RMShape* box1;
 rm::RMShape* sphere2;
 rm::RMShape* line;
 rm::RMShape* ground;
+rm::RMShape* sphere3;
 
 // Verlet Objects
 VerletObject* testSphere;
+VerletObject* testSphere2;
 VerletObject* testPlane;
 
 // Initilization of global variables
 void init() {
 	gameTime = 0;
 
-	userInput == rm::None;
+	userInput = rm::None;
 
 	// Redoing sphere stuff
 	sphere1 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(-1.5f, 3, 0),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(cos(5), 0, sin(2), 0.05),
+		sf::Glsl::Vec4(cosf(5), 0, sinf(2), 0.05f),
 		0.5f
 	);
 
 	box1 = rm::RMShape::createBox(
 		sf::Glsl::Vec3(-2, 3, 0),
 		sf::Glsl::Vec3(3, 1, 0),
-		sf::Glsl::Vec4(0, 1, 0.7, 0.4),
+		sf::Glsl::Vec4(0, 1, 0.7f, 0.4f),
 		sf::Glsl::Vec3(1, 3, 0.2f)
 	);
 
@@ -67,7 +69,7 @@ void init() {
 	line = rm::RMShape::createCapsule(
 		sf::Glsl::Vec3(5, 0.5, 0),
 		sf::Glsl::Vec3(3, 3, 2),
-		sf::Glsl::Vec4(0.2, 0.69, 0.42, 1),
+		sf::Glsl::Vec4(0.2f, 0.69f, 0.42f, 1.f),
 		0.1f
 	);
 
@@ -79,12 +81,20 @@ void init() {
 		0
 	);
 
+	sphere3 = rm::RMShape::createSphere(
+		sf::Glsl::Vec3(1, 3, 2.5f),
+		sf::Glsl::Vec3(0, 0, 0),
+		sf::Glsl::Vec4(0, 1, 0, 1),
+		1.f
+	);
+
 	// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
 
 	testSphere = new VerletObject(sphere2);
-	testPlane = new VerletObject(ground);
+	testPlane = new VerletObject(ground, true);
+	testSphere2 = new VerletObject(sphere3);
 
 	printf("%f\n", box1->getSignedDistance(Vec3()));
 }
@@ -102,11 +112,13 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 	window->clear(sf::Color::Blue);
 
 	// Start drawing here (Gets redrawn every frame so positions could be modified)
-	box1->draw(shader);
+	//box1->draw(shader);
 
 	sphere2->draw(shader);
 
-	line->draw(shader);
+	sphere3->draw(shader);
+
+	//line->draw(shader);
 
 	ground->draw(shader);
 
@@ -127,7 +139,7 @@ void update(sf::Clock* gameClock) {
 	forward = rotateXYZ(sf::Vector3f(0, 0, 1), sf::Vector3f(0, rotation.y, 0));
 
 	sf::Glsl::Vec3 spherePos = sphere1->getPosition();
-	spherePos.x = -1.5 + cos(0.5 * gameTime);
+	spherePos.x = -1.5f + cosf(0.5f * gameTime);
 	sphere1->setPosition(spherePos);
 
 	box1->setRotation(sf::Glsl::Vec3(

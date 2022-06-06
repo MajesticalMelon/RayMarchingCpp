@@ -19,14 +19,14 @@ Vec3 rm::VectorHelper::vectorMin(Vec3 p, Vec3 q) {
 }
 
 float rm::VectorHelper::dot(Vec3 p, Vec3 q) {
-    return p.x * q.x + p.y * q.y + p.y * q.y;
+    return p.x * q.x + p.y * q.y + p.z * q.z;
 }
 
 float rm::VectorHelper::clamp(float val, float low, float high) {
     return fmax(fmin(val, high), low);
 }
 
-Vec3 rm::VectorHelper::normalize(Vec3& p) {
+Vec3 rm::VectorHelper::normalize(Vec3 p) {
     p /= length(p);
     return p;
 }
@@ -226,6 +226,7 @@ int rm::RMShape::getIndex() {
 float rm::RMShape::getSignedDistance(Vec3 p)
 {
     float signedDistance;
+    p = inverseRotatXYZ(p - position, rotation);
 
     switch (type) {
     case rm::Invalid:
@@ -265,4 +266,17 @@ float rm::RMShape::getSignedDistance(Vec3 p)
     }
 
     return signedDistance;
+}
+
+Vec3 rm::RMShape::getNormal(Vec3 p)
+{
+    float dist = getSignedDistance(p);
+
+    Vec3 n = Vec3(dist, dist, dist) - Vec3(
+        getSignedDistance({ p.x - 0.01f, p.y, p.z }),
+        getSignedDistance({ p.x, p.y - 0.01f, p.z }),
+        getSignedDistance({ p.x, p.y, p.z - 0.01f })
+    );
+
+    return VectorHelper::normalize(n);
 }

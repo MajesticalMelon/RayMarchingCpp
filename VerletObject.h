@@ -1,4 +1,4 @@
-#pragma once;
+#pragma once
 
 #include <vector>
 #include <SFML/System.hpp>
@@ -17,11 +17,13 @@ private:
 	Vector3f acceleration;
 	rm::RMShape* collider;
 
+	bool isStatic;
+
 public:
 	static std::vector<VerletObject*> verletObjects;
 
-	VerletObject(Vector3f pos);
-	VerletObject(rm::RMShape* shape);
+	VerletObject(Vector3f pos, bool _isStatic = false);
+	VerletObject(rm::RMShape* shape, bool _isStatic = false);
 	~VerletObject();
 	void update(float deltaTime);
 	void accelerate(Vector3f acc);

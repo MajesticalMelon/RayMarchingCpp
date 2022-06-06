@@ -2,7 +2,7 @@
 
 std::vector<VerletObject*> VerletObject::verletObjects = std::vector<VerletObject*>();
 
-VerletObject::VerletObject(Vector3f pos)
+VerletObject::VerletObject(Vector3f pos, bool _isStatic)
 {
 	positionCurrent = pos;
 	positionOld = pos;
@@ -11,16 +11,20 @@ VerletObject::VerletObject(Vector3f pos)
 	// Default collider is a sphere
 	collider = rm::RMShape::createSphere(pos, { 0, 0, 0 }, { 1, 0, 0, 1 }, 1);
 
+	isStatic = _isStatic;
+
 	verletObjects.push_back(this);
 }
 
-VerletObject::VerletObject(rm::RMShape* shape)
+VerletObject::VerletObject(rm::RMShape* shape, bool _isStatic)
 {
 	positionCurrent = shape->getPosition();
 	positionOld = positionCurrent;
 	velocity = Vector3f();
 	acceleration = Vector3f();
 	collider = shape;
+
+	isStatic = _isStatic;
 
 	verletObjects.push_back(this);
 }

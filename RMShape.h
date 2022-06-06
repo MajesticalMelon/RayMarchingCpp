@@ -21,7 +21,7 @@ namespace rm {
 
         float clamp(float val, float low, float high);
 
-        Vec3 normalize(Vec3& p);
+        Vec3 normalize(Vec3 p);
     }
 
     class RMShape {
@@ -74,6 +74,7 @@ namespace rm {
         int getIndex();
 
         float getSignedDistance(Vec3 p);
+        Vec3 getNormal(Vec3 p);
 
         static std::vector<RMShape*> shapes;
 

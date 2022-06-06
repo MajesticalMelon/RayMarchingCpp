@@ -2,67 +2,122 @@
 
 #include <SFML/System.hpp>
 #include "VerletObject.h"
+#include "RMShape.h"
 
 using namespace sf;
 
-static struct VerletSolver {
+struct VerletSolver {
 	static void update(float deltaTime) {
+
+		const int subSteps = 2;
+		const float subDelta = deltaTime / (float)subSteps;
 		// Gravity
 		applyGravity();
+
+		solveCollsions();
 
 		// Update positions
 		for (VerletObject* vo : VerletObject::verletObjects) {
 			vo->update(deltaTime);
 		}
-
-		solveCollsions();
 	}
 
 	static void applyGravity() {
-		const Vector3f GRAVITY = { 0, -1.2f, 0 };
+		const Vector3f GRAVITY = { 0, -9.8f, 0 };
 		for (VerletObject* vo : VerletObject::verletObjects) {
+			if (vo->isStatic) continue;
 			vo->accelerate(GRAVITY);
 		}
 	}
 
 	static void solveCollsions() {
-		for (int i = 0; i < VerletObject::verletObjects.size(); i++) {
-			VerletObject s1 = *VerletObject::verletObjects[i];
-			for (int j = 0; j < VerletObject::verletObjects.size(); j++) {
+		for (unsigned int i = 0; i < VerletObject::verletObjects.size(); i++) {
+			VerletObject* s1 = VerletObject::verletObjects[i];
+			for (unsigned int j = i; j < VerletObject::verletObjects.size(); j++) {
 				// Don't check collisions against the same two objects
 				if (i == j) continue;
 
-				VerletObject s2 = *VerletObject::verletObjects[j];
+				VerletObject* s2 = VerletObject::verletObjects[j];
 
-				if (checkCollision(*s1.collider, *s2.collider)) {
+				// Collision variable
+				bool isCollision;
+				Vector3f collisionPoint;
+				float minDist;
 
+				std::tie(isCollision, collisionPoint, minDist) = checkCollision(*s1, *s2);
+
+				if (isCollision) {
+					float dist1 = abs(s2->collider->getSignedDistance(s1->getPosition()));
+					float dist2 = abs(s1->collider->getSignedDistance(s2->getPosition()));
+					float overlapDist = rm::VectorHelper::length(s1->getPosition() - s2->getPosition()) - dist1 + dist2;
+
+					Vector3f moveDir = s2->collider->getNormal(collisionPoint) * abs(s1->collider->getSignedDistance(collisionPoint));
+					if (!s1->isStatic) {
+						s1->positionCurrent += moveDir;
+					}
+
+					if (!s2->isStatic) {
+						s2->positionCurrent -= moveDir;
+					}
+
+					printf("Collision Point: { %f, %f, %f }\n", collisionPoint.x, collisionPoint.y, collisionPoint.z);
 				}
 			}
 		}
 	}
 
-	static bool checkCollision(rm::RMShape s1, rm::RMShape s2) {
+	/// <summary>
+	/// Checks for collisions between two RMShapes (Colliders)
+	/// -- order doesn't matter
+	/// </summary>
+	/// <param name="s1">Shape 1</param>
+	/// <param name="s2">Shape 2</param>
+	/// <returns>Whether there was a collision, Point of collision, Minimum intersection distance</returns>
+	static std::tuple<bool, Vector3f, float> checkCollision(VerletObject o1, VerletObject o2) {
+		rm::RMShape s1 = *o1.collider;
+		rm::RMShape s2 = *o2.collider;
 		float minDist = s2.getSignedDistance(s1.getPosition());
-		float* offset = &minDist;
 		Vector3f offsets[6] = {
-			{*offset, 0, 0}, {-*offset, 0, 0},
-			{0, *offset, 0}, {0, -*offset, 0},
-			{0, 0, *offset}, {0, 0, -*offset}
+			{minDist, 0, 0}, {-minDist, 0, 0},
+			{0, minDist, 0}, {0, -minDist, 0},
+			{0, 0, minDist}, {0, 0, -minDist}
 		};
-		while (minDist > 0.01f) {
+
+		// Assume there is one until proven otherwise
+		bool isCollision = false;
+		Vector3f closestOffset;
+
+		do {
+			closestOffset = { 0, 0, 0 };
+			isCollision = false;
+
 			for (int i = 0; i < 6; i++) {
-				// TODO: Break out of loop if all points are outside of shape
 
 				// Make sure the check point is within the shape
-				if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > 0.01f) continue;
+				if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > 0.1f) continue;
 
 				// Find the closest check point
-				minDist = fmin(minDist, s2.getSignedDistance(s1.getPosition() + offsets[i]));
+				float dist = s2.getSignedDistance(s1.getPosition() + offsets[i]);
+				if (dist < minDist) {
+					minDist = dist;
+					closestOffset = offsets[i];
+					isCollision = true;
+				}
 			}
 
-			printf("%f\n", offsets[0].x);
-		}
+			// Remake offsets based on the closest offset
+			offsets[0] = { closestOffset.x + minDist, closestOffset.y, closestOffset.z };
+			offsets[1] = { closestOffset.x - minDist, closestOffset.y, closestOffset.z };
+			offsets[2] = { closestOffset.x, closestOffset.y + minDist, closestOffset.z };
+			offsets[3] = { closestOffset.x, closestOffset.y - minDist, closestOffset.z };
+			offsets[4] = { closestOffset.x, closestOffset.y, closestOffset.z + minDist };
+			offsets[5] = { closestOffset.x, closestOffset.y, closestOffset.z - minDist };
+		} while (minDist > 0.f && isCollision);
 
-		return true;
+		// TODO: Determine correct collision point more accurately
+
+		Vector3f collisionPointOnS1 = s1.getPosition() + closestOffset;
+
+		return std::make_tuple(isCollision, collisionPointOnS1, minDist);
 	}
 };
