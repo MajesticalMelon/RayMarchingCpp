@@ -47,18 +47,14 @@ struct VerletSolver {
 				std::tie(isCollision, collisionPoint, minDist) = checkCollision(*s1, *s2);
 
 				if (isCollision) {
-					float dist1 = abs(s2->collider->getSignedDistance(s1->getPosition()));
-					float dist2 = abs(s1->collider->getSignedDistance(s2->getPosition()));
-					float overlapDist = rm::VectorHelper::length(s1->getPosition() - s2->getPosition()) - dist1 + dist2;
-
-					Vector3f moveDir = s2->collider->getNormal(collisionPoint) * abs(s1->collider->getSignedDistance(collisionPoint));
+					/*Vector3f moveDir = s2->collider->getNormal(collisionPoint) * abs(s1->collider->getSignedDistance(collisionPoint));
 					if (!s1->isStatic) {
 						s1->positionCurrent += moveDir;
 					}
 
 					if (!s2->isStatic) {
 						s2->positionCurrent -= moveDir;
-					}
+					}*/
 
 					printf("Collision Point: { %f, %f, %f }\n", collisionPoint.x, collisionPoint.y, collisionPoint.z);
 				}

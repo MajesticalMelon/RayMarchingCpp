@@ -15,7 +15,7 @@ float gameTime;
 int userInput;
 
 // Camera
-sf::Vector3f position(0, 1, 0);
+sf::Vector3f position(0, 0.1f, 0);
 sf::Vector3f rotation(0, 0, 0);
 sf::Vector3f look(0, 0, 1);
 sf::Vector3f right(1, 0, 0);
