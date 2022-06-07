@@ -92,7 +92,7 @@ void init() {
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
 
-	testSphere = new VerletObject(sphere2);
+	//testSphere = new VerletObject(sphere2);
 	testPlane = new VerletObject(ground, true);
 	testSphere2 = new VerletObject(sphere3);
 
