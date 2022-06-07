@@ -1,5 +1,8 @@
 #pragma once
 
+#include <thread>
+#include <future>
+
 #include <SFML/System.hpp>
 #include "VerletObject.h"
 #include "RMShape.h"
@@ -68,7 +71,11 @@ struct VerletSolver {
 	/// <param name="s1">Shape 1</param>
 	/// <param name="s2">Shape 2</param>
 	/// <returns>Whether there was a collision, Point of collision, Minimum intersection distance</returns>
-	static std::tuple<bool, Vector3f> checkCollision(VerletObject o1, VerletObject o2) {
+	static std::pair<bool, Vector3f> checkCollision(VerletObject o1, VerletObject o2) {
+		std::vector<std::thread> checkThreads;
+		std::vector<std::promise<std::pair<bool, Vector3f>>> promises;
+		std::vector<std::pair<bool, Vector3f>> results;
+
 		rm::RMShape s1 = *o1.collider;
 		rm::RMShape s2 = *o2.collider;
 		float minDist = s2.getSignedDistance(s1.getPosition());
@@ -80,49 +87,26 @@ struct VerletSolver {
 
 		// Assume there is one until proven otherwise
 		bool isCollision = false;
-		Vector3f closestOffset;
 
-		do {
-			closestOffset = { 0, 0, 0 };
-			isCollision = false;
+		for (int i = 0; i < 6; i++) {
+			// Make sure the check point is within the shape
+			if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > 0.f) continue;
 
-			for (int i = 0; i < 6; i++) {
+			// Check for collisions starting at all points that are within the shape
 
-				// Make sure the check point is within the shape
-				if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > 0.1f) continue;
-
-				// Find the closest check point
-				float dist = s2.getSignedDistance(s1.getPosition() + offsets[i]);
-				if (dist < minDist) {
-					minDist = dist;
-					closestOffset = offsets[i];
-					isCollision = true;
-				}
-			}
-
-			// Remake offsets based on the closest offset
-			offsets[0] = { closestOffset.x + minDist, closestOffset.y, closestOffset.z };
-			offsets[1] = { closestOffset.x - minDist, closestOffset.y, closestOffset.z };
-			offsets[2] = { closestOffset.x, closestOffset.y + minDist, closestOffset.z };
-			offsets[3] = { closestOffset.x, closestOffset.y - minDist, closestOffset.z };
-			offsets[4] = { closestOffset.x, closestOffset.y, closestOffset.z + minDist };
-			offsets[5] = { closestOffset.x, closestOffset.y, closestOffset.z - minDist };
-
-
-		} while (minDist > 0.f && isCollision);
-
-		// TODO: Determine correct collision point more accurately
-
-		Vector3f collisionPoint = s1.getPosition() + closestOffset;
-
-		if (s1.getSignedDistance(collisionPoint) >= 0.f) {
-			isCollision = false;
+			// Doing some multithreading
+			promises.push_back(std::promise<std::pair<bool, Vector3f>>());
+			//results.push_back(promises.pop)
+			//checkThreads.push_back()
+			//futures.push_back(std::async(&checkCollisionWithStartOffset, o1, o2, offsets[i]));
 		}
 
-		return std::make_tuple(isCollision, collisionPoint);
+		// If there are elements in results then collisions were detected
+		return std::make_pair(results.size() > 0, Vector3f());
 	}
 
-	static std::tuple<bool, Vector3f> checkCollisionWithStartOffset(VerletObject o1, VerletObject o2, Vector3f startOffset) {
+	// Different checking
+	static void checkCollisionWithStartOffset(VerletObject o1, VerletObject o2, Vector3f startOffset, std::promise<std::pair<bool, Vector3f>>* promise) {
 		rm::RMShape s1 = *o1.collider;
 		rm::RMShape s2 = *o2.collider;
 		float minDist = s2.getSignedDistance(s1.getPosition() + startOffset);
@@ -165,14 +149,12 @@ struct VerletSolver {
 
 		} while (minDist > 0.f && isCollision);
 
-		// TODO: Determine correct collision point more accurately
-
 		Vector3f collisionPoint = s1.getPosition() + closestOffset;
 
 		if (s1.getSignedDistance(collisionPoint) >= 0.f) {
 			isCollision = false;
 		}
 
-		return std::make_tuple(isCollision, collisionPoint);
+		promise->set_value(std::make_pair(isCollision, collisionPoint));
 	}
 };
