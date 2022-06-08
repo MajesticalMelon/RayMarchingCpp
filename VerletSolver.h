@@ -74,7 +74,7 @@ struct VerletSolver {
 	static std::pair<bool, Vector3f> checkCollision(VerletObject o1, VerletObject o2) {
 		std::vector<std::thread> checkThreads;
 		std::vector<std::promise<std::pair<bool, Vector3f>>> promises;
-		std::vector<std::pair<bool, Vector3f>> results;
+		std::vector<std::future<std::pair<bool, Vector3f>>> results;
 
 		rm::RMShape s1 = *o1.collider;
 		rm::RMShape s2 = *o2.collider;
@@ -96,17 +96,34 @@ struct VerletSolver {
 
 			// Doing some multithreading
 			promises.push_back(std::promise<std::pair<bool, Vector3f>>());
-			//results.push_back(promises.pop)
-			//checkThreads.push_back()
-			//futures.push_back(std::async(&checkCollisionWithStartOffset, o1, o2, offsets[i]));
+			results.push_back(promises[promises.size() - 1].get_future());
+			checkThreads.push_back(std::thread(&checkCollisionWithStartOffset, o1, o2, offsets[i], std::move(promises[promises.size() - 1])));
+		}
+
+		for (std::thread& t : checkThreads) {
+			t.join();
+		}
+
+		float collisionDist = FLT_MAX;
+		Vector3f collisionPoint;
+		for (std::future<std::pair<bool, Vector3f>>& futures : results) {
+			std::pair<bool, Vector3f> result = futures.get();
+			if (!result.first) continue;
+
+			isCollision = true;
+			float dist = abs(s1.getSignedDistance(result.second));
+			if (dist < collisionDist) {
+				collisionDist = dist;
+				collisionPoint = result.second;
+			}
 		}
 
 		// If there are elements in results then collisions were detected
-		return std::make_pair(results.size() > 0, Vector3f());
+		return std::make_pair(isCollision, collisionPoint);
 	}
 
 	// Different checking
-	static void checkCollisionWithStartOffset(VerletObject o1, VerletObject o2, Vector3f startOffset, std::promise<std::pair<bool, Vector3f>>* promise) {
+	static void checkCollisionWithStartOffset(VerletObject o1, VerletObject o2, Vector3f startOffset, std::promise<std::pair<bool, Vector3f>> promise) {
 		rm::RMShape s1 = *o1.collider;
 		rm::RMShape s2 = *o2.collider;
 		float minDist = s2.getSignedDistance(s1.getPosition() + startOffset);
@@ -155,6 +172,6 @@ struct VerletSolver {
 			isCollision = false;
 		}
 
-		promise->set_value(std::make_pair(isCollision, collisionPoint));
+		promise.set_value(std::make_pair(isCollision, collisionPoint));
 	}
 };
