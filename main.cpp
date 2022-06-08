@@ -32,11 +32,17 @@ rm::RMShape* sphere2;
 rm::RMShape* line;
 rm::RMShape* ground;
 rm::RMShape* sphere3;
+rm::RMShape* box2;
 
 // Verlet Objects
 VerletObject* testSphere;
 VerletObject* testSphere2;
 VerletObject* testPlane;
+VerletObject* testBox;
+VerletObject* wall1;
+VerletObject* wall2;
+VerletObject* wall3;
+VerletObject* wall4;
 
 // Initilization of global variables
 void init() {
@@ -88,13 +94,21 @@ void init() {
 		1.f
 	);
 
+	box2 = rm::RMShape::createBox(
+		sf::Glsl::Vec3(1, 3, 2.5f),
+		sf::Glsl::Vec3(1, 0.2f, 0.7f),
+		sf::Glsl::Vec4(0, 1, 0, 1),
+		sf::Glsl::Vec3(1, 2, 0.5f)
+	);
+
 	// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
 	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
 
-	//testSphere = new VerletObject(sphere2);
+	//testSphere2 = new VerletObject(sphere3);
+	testSphere = new VerletObject(sphere2);
+	testBox = new VerletObject(box2);
 	testPlane = new VerletObject(ground, true);
-	testSphere2 = new VerletObject(sphere3);
 
 	printf("%f\n", box1->getSignedDistance(Vec3()));
 }
@@ -116,9 +130,11 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 
 	sphere2->draw(shader);
 
-	sphere3->draw(shader);
+	//sphere3->draw(shader);
 
 	//line->draw(shader);
+
+	box2->draw(shader);
 
 	ground->draw(shader);
 

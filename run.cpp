@@ -34,7 +34,7 @@ int main() {
 
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
-	RectangleShape screen(Vector2f(window.getSize().x, window.getSize().y));
+	RectangleShape screen(Vector2f((float)window.getSize().x, (float)window.getSize().y));
 
 	// Clock
 	Clock gameClock;
@@ -61,7 +61,7 @@ int main() {
 			// Dynamically change the size of the window
 			if (event.type == Event::Resized) {
 				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
-				screen.setSize(sf::Vector2f(window.getSize().x, window.getSize().y));
+				screen.setSize(sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
 			}
 
 			// Go in the direction that was pressed
