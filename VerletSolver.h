@@ -50,7 +50,7 @@ struct VerletSolver {
 				bool isCollision;
 				Vector3f collisionPoint;
 
-				std::tie(isCollision, collisionPoint) = checkCollision(*s1, *s2);
+				std::tie(isCollision, collisionPoint) = checkCollision(*s1->collider, *s2->collider);
 
 				if (isCollision) {
 					Vector3f moveDir;
@@ -70,16 +70,18 @@ struct VerletSolver {
 	}
 
 	/// <summary>
-	/// Checks for collisions between two RMShapes (Colliders)
-	/// -- order doesn't matter
+	/// Recursively checks for collisions by marching from one shape to the other
 	/// </summary>
-	/// <param name="s1">Shape 1</param>
-	/// <param name="s2">Shape 2</param>
-	/// <returns>Whether there was a collision, Point of collision</returns>
-	static std::pair<bool, Vector3f> checkCollision(const VerletObject& o1, const VerletObject& o2, Vector3f startOffset = Vector3f()) {
-		rm::RMShape s1 = *o1.collider;
-		rm::RMShape s2 = *o2.collider;
-		float minDist = s2.getSignedDistance(s1.getPosition() + startOffset);
+	/// <param name="s1">A RMShape collider</param>
+	/// <param name="s2">Another RMShape collider</param>
+	/// <param name="startOffset">
+	/// The point to start marching from relative to s1's position
+	/// (Used for recursion)
+	/// </param>
+	/// <returns>A pair containing whether a valid collision point was found, and the collision point itself</returns>
+	static std::pair<bool, Vector3f> checkCollision(rm::RMShape& s1, rm::RMShape& s2, Vector3f startOffset = Vector3f()) {
+		// Grab the colliders since they are used a lot
+		float minDist = abs(s2.getSignedDistance(s1.getPosition() + startOffset));
 
 		const unsigned int numOffsets = 14;
 		Vector3f offsets[numOffsets] = {
@@ -97,32 +99,37 @@ struct VerletSolver {
 		};
 
 		// Assume there is no collision until proven otherwise
-		bool isCollision = false;
+		bool possibleCollision = false;
 		Vector3f closestOffset = { 0, 0, 0 };
 
 		for (unsigned int i = 0; i < numOffsets; i++) {
 
 			// Make sure the check point is within the shape
-			if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > 0.1f) continue;
+			if (s1.getSignedDistance(s1.getPosition() + offsets[i]) > FLT_EPSILON) continue;
 
 			// Find the closest check point
 			float dist = s2.getSignedDistance(s1.getPosition() + offsets[i]);
 			if (abs(dist) < minDist) {
 				minDist = dist;
 				closestOffset = offsets[i];
-				isCollision = true;
+				possibleCollision = true;
 			}
 		}
 
-		if (isCollision && minDist > 0.f) {
-			return checkCollision(o1, o2, closestOffset);
-		}
-
+		// Grab the found collision point
 		Vector3f collisionPoint = s1.getPosition() + closestOffset;
-		if (s1.getSignedDistance(collisionPoint) >= 0.f) {
-			isCollision = false;
+
+		// Recursively march toward a possible collision point
+		if (possibleCollision && minDist > FLT_EPSILON) {
+			if (minDist > FLT_EPSILON) {
+				return checkCollision(s1, s2, closestOffset);
+			}
+
+			// A collision point will be on the edge of s1 too
+			possibleCollision = s1.getSignedDistance(collisionPoint) < FLT_EPSILON;
 		}
 
-		return std::make_pair(isCollision, collisionPoint);
+		// Give back the found results
+		return std::make_pair(possibleCollision, collisionPoint);
 	}
 };
