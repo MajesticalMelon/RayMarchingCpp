@@ -32,7 +32,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Marcher.frag" />
+    <None Include="alps_field_4k.hdr">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Marcher.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RMShape.h">

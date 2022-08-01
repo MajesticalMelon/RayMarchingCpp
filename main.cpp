@@ -54,19 +54,19 @@ void init() {
 	sphere1 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(-1.5f, 3, 0),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(cosf(5), 0, sinf(2), 0.05f),
+		sf::Glsl::Vec4(cosf(5), 0, sinf(2), 0.1f),
 		0.5f
 	);
 
 	box1 = rm::RMShape::createBox(
 		sf::Glsl::Vec3(-2, 3, 0),
 		sf::Glsl::Vec3(3, 1, 0),
-		sf::Glsl::Vec4(0, 1, 0.7f, 0.4f),
+		sf::Glsl::Vec4(0, 1, 0.5f, 0.1f),
 		sf::Glsl::Vec3(1, 3, 0.2f)
 	);
 
 	sphere2 = rm::RMShape::createSphere(
-		sf::Glsl::Vec3(0, 15, 5),
+		sf::Glsl::Vec3(0, 10, 5),
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec4(1, 0, 0, 1),
 		2
@@ -82,7 +82,7 @@ void init() {
 	ground = rm::RMShape::createPlane(
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(1, 1, 1, 1),
+		sf::Glsl::Vec4(0.65, 0.65, 0.7, 1),
 		sf::Glsl::Vec3(0, 1, 0),
 		0
 	);
@@ -90,7 +90,7 @@ void init() {
 	sphere3 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(1, 3, 2.5f),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(0, 1, 0, 1),
+		sf::Glsl::Vec4(0.7f, 0.2f, 0.5f, 1),
 		1.f
 	);
 
@@ -123,16 +123,16 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 	shader->setUniform("camRotation", rotation);
 
 	// Draw the background color
-	window->clear(sf::Color::Blue);
+	window->clear();
 
 	// Start drawing here (Gets redrawn every frame so positions could be modified)
-	//box1->draw(shader);
+	box1->draw(shader);
 
 	sphere2->draw(shader);
 
-	//sphere3->draw(shader);
+	sphere3->draw(shader);
 
-	//line->draw(shader);
+	line->draw(shader);
 
 	box2->draw(shader);
 
@@ -165,7 +165,7 @@ void update(sf::Clock* gameClock) {
 	));
 
 	// Physics updates
-	VerletSolver::update(deltaTime);
+	//VerletSolver::update(deltaTime);
 
 	//sphere2->setPosition(testSphere->getPosition());
 

@@ -29,8 +29,8 @@ int main() {
 
 	// Load texture
 	Texture testTexture;
-	testTexture.loadFromFile("testTexture.jpg");
-	rayMarchingShader.setUniform("testTexture", testTexture);
+	testTexture.loadFromFile("alps_field_4k.hdr");
+	rayMarchingShader.setUniform("skybox", testTexture);
 
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
@@ -39,7 +39,6 @@ int main() {
 	// Clock
 	Clock gameClock;
 	Clock deltaClock;
-	float deltaTime = 0;
 
 	// Initializes global variable within main.cpp before starting
 	init();
@@ -84,11 +83,14 @@ int main() {
 		// Update here
 		update(&deltaClock);
 
+
 		// Reset clock for calculating delta time
 		deltaClock.restart();
 
 		// Send the current running time to the shader
 		rayMarchingShader.setUniform("time", gameClock.getElapsedTime().asSeconds());
+		rayMarchingShader.setUniform("deltaTime", deltaClock.getElapsedTime().asSeconds());
+
 	}
 
 	// Cleanup any shapes that were created

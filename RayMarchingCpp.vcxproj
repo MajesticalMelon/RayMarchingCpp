@@ -26,6 +26,7 @@
     <ClCompile Include="VerletObject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="alps_field_4k.hdr" />
     <None Include="Marcher.frag" />
   </ItemGroup>
   <ItemGroup>

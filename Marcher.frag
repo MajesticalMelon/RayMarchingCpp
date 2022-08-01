@@ -1,13 +1,21 @@
-#version 150
+#version 330
 
-uniform sampler2D texture;
-uniform sampler2D testTexture;
+uniform sampler2D tex;
+uniform sampler2D skybox;
+
+
+
+out vec4 FragColor;
 
 // Constants for the Ray Marching Algorithm
-const float MAX_DISTANCE = 100.;
-const float TOLERANCE = 0.0001;
-const int MAX_STEPS = 10000;
+const float MAX_DISTANCE = 1000.;
+const float TOLERANCE = 0.001;
+const int MAX_STEPS = 500;
 const float PI = 3.14159265359;
+const float GAMMA = 2.2;
+const int MAX_BOUNCES = 2;
+const int MAX_SAMPLES = 1;
+const float SHADOW_STRENGTH = 0;
 
 // Shape types
 const int SPHERE = 1;
@@ -23,7 +31,7 @@ const int SMOOTH_UNION = 4;
 const int SMOOTH_INTERSECTION = 5;
 const int SMOOTH_SUBTRACT = 6;
 
-vec4 difCol = vec4(0., 0., 0., 1.);
+vec4 difCol = vec4(1., 1., 1., 1.);
 
 mat3 rotateXYZ(vec3 rot) {
     mat3 rotation;
@@ -46,14 +54,21 @@ mat3 rotateXYZ(vec3 rot) {
     return rotation;
 }
 
-uniform vec2 windowDimensions = vec2(800, 600);
+const uniform vec2 windowDimensions = vec2(800, 600);
 uniform vec3 camPosition = vec3(0, 1, 0);
 uniform vec3 camRotation = vec3(0);
 
 uniform float time = 0;
+uniform float deltaTime = 0;
 
 // Used for checking and returning the distance to the scene
 // and the color at that point in a nice package
+
+struct Light {
+    vec3 position;
+    float radius;
+    vec4 color;
+};
 
 struct Shape {
     vec3 position;
@@ -72,7 +87,8 @@ struct Shape {
 
     // material properties
     float metallic;
-    float reflectivity;
+    float roughness;
+    bool emissive;
 };
 
 struct Sphere {
@@ -93,7 +109,7 @@ uniform int numSpheres = 0;
 uniform Box boxes[10];
 uniform int numBoxes = 0;
 
-uniform vec3 lights[2] = { vec3(0, 10., 0), vec3(-5, 2, 3) };
+uniform vec3 lights[2] = { vec3(0, 1000., 0), vec3(-5, 2, 3) };
 
 // Copied from https://www.shadertoy.com/view/Ml3Gz8
 float smoothMin(float a, float b, float k) {
@@ -245,15 +261,25 @@ Shape operateSDF(Shape s1, Shape s2) {
     return s1;
 }
 
+// Random number generation - byteblacksmith
+float rand(vec2 co) {
+    highp float a = 12.9898;
+    highp float b = 78.233;
+    highp float c = 43758.5453;
+    highp float dt = dot(co.xy, vec2(a, b));
+    highp float sn = mod(dt, 3.14);
+    return fract(sin(sn) * c);
+}
+
 Shape SceneSDF(vec3 p) {
 
     Shape scene;
 
-    scene.signedDistance = 2 * MAX_DISTANCE;
+    scene.signedDistance = 1000;
     scene.color = vec4(1, 1, 1, 1);
     scene.type = 0;
     scene.metallic = 0;
-    scene.reflectivity = 0;
+    scene.roughness = 0;
 
     Shape check;
 
@@ -283,115 +309,60 @@ Shape SceneSDF(vec3 p) {
     }
 
     if (scene.type == BOX) {
-        scene.reflectivity = 0.1;
-    } else {
-        scene.reflectivity = 0;
+        scene.roughness = 0.5;
+        scene.metallic = 0.5;
+    } else if (scene.type != 0) {
+        scene.roughness = 0.;
+        scene.metallic = 1.;
     }
+
+    scene.emissive = false;
 
 	return scene;
 }
 
-// Used for traversing through the scene until a solid object is hit
-float RayMarch(vec3 ro, vec3 rd, out vec4 dCol, out float nearest) {
-	float distTotal = 0.;
+// Used for traversing through the scene until an object is hit
+float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
+    float distTotal = 0;
+    vec4 accCol = vec4(0, 0, 0, 1);
+    for (int i = 0; i < MAX_STEPS; i++) {
 
-    vec4 accCol = vec4(0.);
-
-    nearest = MAX_DISTANCE;
-    
-    for (int i = 0; i < MAX_STEPS; i++)
-    {   
-        // March away from origin
         vec3 p = ro + rd * distTotal;
-        
-        // Get distance to the scene
         Shape scene = SceneSDF(p);
         float dist = scene.signedDistance;
 
-        // Check if the ray has hit
-        if (dist < TOLERANCE)
-        {
-            // Should only save the first time this statement is run
-            nearest = min(distTotal, nearest);
+        if (dist < TOLERANCE) {
+            accCol.rgb += scene.color.rgb * (accCol.a * scene.color.a);
+            accCol.a *= (1 - scene.color.a);
+                
+            if (scene.color.a < 1 - TOLERANCE)
+                distTotal += TOLERANCE * 10;
 
-            accCol.rgb += scene.color.rgb * scene.color.a * (1. - accCol.a);
-
-            accCol.a += scene.color.a * (1. - accCol.a);
-
-            if (scene.color.a <= 1 - TOLERANCE) {
-                // Add more to the distance to get it through the object
-                distTotal += TOLERANCE;
-            }
-
-            if (accCol.a >= 1. - TOLERANCE) {
-                accCol.a = 1.;
-
+            if (accCol.a < 0.05) {
                 dCol = accCol;
+                dCol.a = 1.;
                 return distTotal;
-             }
-        }
-        
-        // Update travelled distance if no hit
-        distTotal += abs(dist);
-        
-        if (distTotal > MAX_DISTANCE)
-        {
-            break;
-        }
-    }
-    dCol = accCol;
-    return distTotal;
-}
-
-// Used for proper lighting of tranparent objects
-float lightMarch(vec3 ro, vec3 rd, vec3 lightPos, out vec4 dCol, out bool hitTransparentObject) {
-	float distTotal = 0.;
-
-    vec4 accCol = vec4(0.);
-
-    hitTransparentObject = false;
-    
-    for (int i = 0; i < MAX_STEPS; i++)
-    {   
-        // March away from origin
-        vec3 p = ro + rd * distTotal;
-        
-        // Get distance to the scene
-        Shape scene = SceneSDF(p);
-        float dist = scene.signedDistance;
-
-        // Check if the ray has hit
-        if (dist < TOLERANCE)
-        {           
-            accCol.rgb += scene.color.rgb * scene.color.a * (1. - accCol.a);
-
-            accCol.a += scene.color.a * (1. - accCol.a);
-
-            if (scene.color.a <= 1 - TOLERANCE) {
-                // Add more to the distance to get it through the object
-                distTotal += TOLERANCE;
-
-                hitTransparentObject = true;
             }
-
-            if (accCol.a >= 1. - TOLERANCE) {
-                accCol.a = 1.;
-
-                dCol = accCol;
-                return distTotal;
-             }
         }
-        
-        // Update travelled distance if no hit
+
         distTotal += abs(dist);
-        
-        if (distTotal > length(lightPos - ro))
-        {
-            break;
+
+        if (distTotal > MAX_DISTANCE) {
+            vec2 uv;
+            uv.x = 0.5 + atan(rd.x, rd.z)/(2 * PI);
+            uv.y = 0.5 - asin(rd.y) / PI;
+            dCol = texture2D(skybox, uv);
+            vec4 mapped = dCol / (dCol + vec4(1.));
+            mapped = pow(mapped, vec4(1 / GAMMA));
+            accCol.rgb += mapped.rgb * (accCol.a * mapped.a);
+            accCol.a *= (1 - mapped.a);
+            dCol = accCol;
+            return distTotal;
         }
     }
 
     dCol = accCol;
+    dCol.a = -1;
     return distTotal;
 }
 
@@ -408,28 +379,70 @@ vec3 getNormal(vec3 p) {
     return normalize(n);
 }
 
-vec4 getLight(vec3 p, vec3 lightPos, vec4 color) {
+// Used for proper lighting & shading
+vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
+    float distTotal = 0;
+    float res = 1.;
+    vec4 accCol = vec4(0, 0, 0, 1);
+    vec4 baseCol = SceneSDF(ro).color;
+    float m = SceneSDF(ro).metallic;
+    float alpha;
+    float prevDist;
+
+    for (int i = 0; i < MAX_STEPS; i++) {
+        Shape scene = SceneSDF(ro + rd * distTotal);
+        float dist = scene.signedDistance;
+
+        if (dist < TOLERANCE) {
+            return vec3(SHADOW_STRENGTH);
+            if (scene.color.a > 1 - TOLERANCE) {
+                
+            }
+
+            // Colored shadows (WIP)
+            accCol.rgb += scene.color.rgb * (accCol.a * scene.color.a);
+            accCol.a *= (1 - scene.color.a);
+                
+            if (scene.color.a <= 1 - TOLERANCE)
+                distTotal += TOLERANCE * 10;
+
+            if (accCol.a < TOLERANCE) {
+                return baseCol.rgb * (1. - scene.color.a) + scene.color.a * accCol.rgb;
+            }
+
+            alpha = scene.color.a;
+        }
+
+        dist = max(abs(dist), TOLERANCE);
+        res = min(res, k * dist / distTotal + SHADOW_STRENGTH);
+        distTotal += abs(dist);
+
+        if (distTotal > length(lights[lightID] - ro)) {
+            return vec3(res);
+        }
+
+        //if (distTotal > MAX_DISTANCE) break;
+    }
+
+    return vec3(res);
+}
+
+vec4 getLight(vec3 p, int lightID, vec4 color) {
+    // Allows the skybox to be unaffected by lighting
+    if (length(p - camPosition) > MAX_DISTANCE - TOLERANCE) {
+        return color;
+    }
+    
+    vec3 lightPos = lights[lightID];
     vec3 l = normalize(lightPos - p);
-
     vec3 n = getNormal(p);
-
-    vec3 dif = vec3(clamp(dot(n, l), 0., 1.));
-
-    vec4 col = vec4(0., 0., 0., 1.);
-    bool hitTransparentObject;
-
-    float dist = lightMarch(p + n * TOLERANCE * 2, l, lightPos, col, hitTransparentObject);
-
-    if (dist < length(lightPos - p)) {
-        dif *= 0.5;
-    }
-
-    if (hitTransparentObject) {
-        col.rgb += color.rgb * color.a * (1. - col.a);
-        dif *= col.rgb;
-    }
-
-    color.rgb *= dif;
+    float dif = clamp(dot(n, l), 0., 1.);
+    
+    // Diffuse lighting and shadows
+    float m = SceneSDF(p).metallic;
+    vec3 lightCol = lightMarch(p + n * TOLERANCE * 2, l, lightID, 28);
+    color.rgb = lightCol * dif;
+    color.a = 1; // Just in case
 
     return color;
 }
@@ -444,7 +457,7 @@ vec4 textureMapping(vec3 p) {
     uv.y = fromPos.y;// + 1.) / 2.;
     //uv.z = 0;
 
-    vec4 tex = texture2D(testTexture, uv);
+    vec4 tex = texture2D(skybox, uv);
 
     return tex;
 }
@@ -455,26 +468,62 @@ void main() {
     vec3 rd = normalize(vec3(uv.x, uv.y, 1.5));
     rd = rotateXYZ(camRotation) * rd;
 
-    float nearest;
-    float dist = RayMarch(camPosition, rd, difCol, nearest);
+    float dist = RayMarch(camPosition, rd, difCol);
 
     vec3 pos = camPosition + rd * dist;
-    vec3 nearestPos = camPosition + rd * nearest;
 
-    vec4 col = getLight(pos, lights[0], difCol) + getLight(pos, lights[1], difCol);
-
-    Shape scene = SceneSDF(nearestPos);
-
-    // Calculate reflections
-    if (scene.reflectivity > 0) {
-        vec3 n = getNormal(nearestPos);
-        rd = reflect(rd, n);
-
-        vec4 refCol;
-        nearestPos += rd * RayMarch(nearestPos + n * TOLERANCE, rd, refCol, nearest);
-
-        col += refCol * scene.reflectivity;
+    if (dist > MAX_DISTANCE - TOLERANCE || difCol.a < 0) {
+        difCol.a = 1.;
+        FragColor = difCol;
+        return;
     }
 
-	gl_FragColor = vec4(col.rgb * difCol.rgb, 1.);
+    vec4 shade = getLight(pos, 0, difCol);
+
+    Shape scene = SceneSDF(pos);
+
+    // Indirect illumination (Need to implement progressive rendering to get a better look)
+    // Doesn't put reflections on transparent objects yet
+    vec4 accCol = vec4(0);
+    vec4 indCol = vec4(0);
+    for (int i = 0; i < MAX_SAMPLES ; i++) {
+        vec3 sn = getNormal(pos);
+        vec3 refd = reflect(rd, sn);
+
+         // Don't need multiple samples if roughness is 0
+        if (scene.roughness < TOLERANCE) {
+            dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
+            accCol += getLight(pos + refd * dist, 0, indCol);
+            accCol *= MAX_SAMPLES;
+            break;
+        }
+
+        refd = sn + (refd - sn) * scene.roughness;
+        vec3 rot = vec3(
+            rand(vec2(time / pos.x, deltaTime)), 
+            rand(vec2(pos.x / pos.y * deltaTime, time / deltaTime)), 
+            rand(vec2(deltaTime * pos.z, length(pos)))
+        );
+
+        // Scale between -PI and PI then by roughness
+        rot *= PI / 2;
+        rot *= scene.roughness;
+        vec3 randd = normalize(rotateXYZ(rot) * refd);
+        dist = RayMarch(pos + sn * TOLERANCE * 2, randd, indCol);
+
+        if (indCol.a < 0) {
+            indCol = scene.color;
+            indCol.a = 1;
+        }
+
+        vec3 refpos = pos + randd * dist;
+        accCol += getLight(refpos, 0, indCol);
+    }
+
+    accCol /= MAX_SAMPLES;
+    difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
+    difCol *= shade;
+
+    difCol.a = 1;
+	FragColor = difCol ;
 }
