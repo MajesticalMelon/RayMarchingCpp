@@ -2,8 +2,7 @@
 
 uniform sampler2D tex;
 uniform sampler2D skybox;
-
-
+uniform sampler2D buff;
 
 out vec4 FragColor;
 
@@ -12,10 +11,11 @@ const float MAX_DISTANCE = 1000.;
 const float TOLERANCE = 0.001;
 const int MAX_STEPS = 500;
 const float PI = 3.14159265359;
-const float GAMMA = 2.2;
+const float GAMMA = 2.5;
 const int MAX_BOUNCES = 2;
 const int MAX_SAMPLES = 1;
 const float SHADOW_STRENGTH = 0;
+const int AO_STEP_SIZE = 1;
 
 // Shape types
 const int SPHERE = 1;
@@ -54,7 +54,7 @@ mat3 rotateXYZ(vec3 rot) {
     return rotation;
 }
 
-const uniform vec2 windowDimensions = vec2(800, 600);
+uniform vec2 windowDimensions = vec2(800, 600);
 uniform vec3 camPosition = vec3(0, 1, 0);
 uniform vec3 camRotation = vec3(0);
 
@@ -309,11 +309,14 @@ Shape SceneSDF(vec3 p) {
     }
 
     if (scene.type == BOX) {
-        scene.roughness = 0.5;
+        scene.roughness = 0.2;
+        scene.metallic = 0.2;
+    } else if (scene.type == PLANE) {
+        scene.roughness = 0.;
         scene.metallic = 0.5;
     } else if (scene.type != 0) {
-        scene.roughness = 0.;
-        scene.metallic = 1.;
+        scene.roughness = 0.7;
+        scene.metallic = 0.9;
     }
 
     scene.emissive = false;
@@ -321,12 +324,25 @@ Shape SceneSDF(vec3 p) {
 	return scene;
 }
 
+vec3 getNormal(vec3 p) {
+    float dist = SceneSDF(p).signedDistance;
+    vec2 e = vec2(TOLERANCE, 0);
+
+    vec3 n = dist - vec3(
+        SceneSDF(p-e.xyy).signedDistance,
+        SceneSDF(p-e.yxy).signedDistance,
+        SceneSDF(p-e.yyx).signedDistance
+    );
+
+    return normalize(n);
+}
+
 // Used for traversing through the scene until an object is hit
 float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
     float distTotal = 0;
     vec4 accCol = vec4(0, 0, 0, 1);
-    for (int i = 0; i < MAX_STEPS; i++) {
 
+    for (int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ro + rd * distTotal;
         Shape scene = SceneSDF(p);
         float dist = scene.signedDistance;
@@ -340,7 +356,6 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 
             if (accCol.a < 0.05) {
                 dCol = accCol;
-                dCol.a = 1.;
                 return distTotal;
             }
         }
@@ -366,19 +381,6 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
     return distTotal;
 }
 
-vec3 getNormal(vec3 p) {
-    float dist = SceneSDF(p).signedDistance;
-    vec2 e = vec2(TOLERANCE, 0);
-
-    vec3 n = dist - vec3(
-        SceneSDF(p-e.xyy).signedDistance,
-        SceneSDF(p-e.yxy).signedDistance,
-        SceneSDF(p-e.yyx).signedDistance
-    );
-
-    return normalize(n);
-}
-
 // Used for proper lighting & shading
 vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
     float distTotal = 0;
@@ -387,7 +389,6 @@ vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
     vec4 baseCol = SceneSDF(ro).color;
     float m = SceneSDF(ro).metallic;
     float alpha;
-    float prevDist;
 
     for (int i = 0; i < MAX_STEPS; i++) {
         Shape scene = SceneSDF(ro + rd * distTotal);
@@ -433,7 +434,9 @@ vec4 getLight(vec3 p, int lightID, vec4 color) {
         return color;
     }
     
-    vec3 lightPos = lights[lightID];
+    vec3 lightPos = vec3(p.x, 100, p.z);
+    lightPos = rotateXYZ(vec3(0, 0, PI / 12)) * lightPos;
+    lightPos = rotateXYZ(vec3(0, mod(time, 2 * PI), 0)) * lightPos;
     vec3 l = normalize(lightPos - p);
     vec3 n = getNormal(p);
     float dif = clamp(dot(n, l), 0., 1.);
@@ -447,19 +450,17 @@ vec4 getLight(vec3 p, int lightID, vec4 color) {
     return color;
 }
 
-vec4 textureMapping(vec3 p) {
-    Shape current = SceneSDF(p);
+float aoMarch(vec3 p) {
+    float sum = 0;
+    float maxSum = 0;
+    vec3 n = getNormal(p);
+    for (int i = 0; i < MAX_STEPS / 50; i++) {
+        vec3 pos = p + n * (i+1) * AO_STEP_SIZE;
+        sum    += 1. / pow(2., i) * abs(SceneSDF(pos).signedDistance);
+        maxSum += 1. / pow(2., i) * (i+1) * AO_STEP_SIZE;
+    }
 
-    vec3 fromPos = p - current.position;
-
-    vec2 uv;
-    uv.x = fromPos.x;// + normalize(fromPos.z) + 2.) / 4.;
-    uv.y = fromPos.y;// + 1.) / 2.;
-    //uv.z = 0;
-
-    vec4 tex = texture2D(skybox, uv);
-
-    return tex;
+    return sum / maxSum;
 }
 
 void main() {
@@ -478,6 +479,7 @@ void main() {
         return;
     }
 
+    float ao = aoMarch(pos);
     vec4 shade = getLight(pos, 0, difCol);
 
     Shape scene = SceneSDF(pos);
@@ -486,14 +488,13 @@ void main() {
     // Doesn't put reflections on transparent objects yet
     vec4 accCol = vec4(0);
     vec4 indCol = vec4(0);
-    for (int i = 0; i < MAX_SAMPLES ; i++) {
-        vec3 sn = getNormal(pos);
+    vec3 sn = getNormal(pos);
         vec3 refd = reflect(rd, sn);
-
+    for (int i = 0; i < MAX_SAMPLES && scene.metallic > TOLERANCE; i++) {
          // Don't need multiple samples if roughness is 0
         if (scene.roughness < TOLERANCE) {
             dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
-            accCol += getLight(pos + refd * dist, 0, indCol);
+            accCol += indCol * getLight(pos + refd * dist, 0, indCol);
             accCol *= MAX_SAMPLES;
             break;
         }
@@ -503,9 +504,10 @@ void main() {
             rand(vec2(time / pos.x, deltaTime)), 
             rand(vec2(pos.x / pos.y * deltaTime, time / deltaTime)), 
             rand(vec2(deltaTime * pos.z, length(pos)))
-        );
+        ) - 0.5;
 
-        // Scale between -PI and PI then by roughness
+        // Scale between -PI / 2 and PI / 2 then by roughness
+        rot *= 2;
         rot *= PI / 2;
         rot *= scene.roughness;
         vec3 randd = normalize(rotateXYZ(rot) * refd);
@@ -517,13 +519,16 @@ void main() {
         }
 
         vec3 refpos = pos + randd * dist;
-        accCol += getLight(refpos, 0, indCol);
+        accCol += indCol * getLight(refpos, 0, indCol);
     }
 
     accCol /= MAX_SAMPLES;
     difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
-    difCol *= shade;
+    difCol *= shade * ao;
+
+    vec4 bufCol = texture2D(buff, gl_FragCoord.xy / windowDimensions);
+    difCol.rgb = mix(difCol.rgb, bufCol.rgb, 0.5);
 
     difCol.a = 1;
-	FragColor = difCol ;
+	FragColor = difCol;
 }
