@@ -38,6 +38,7 @@
     <None Include="Marcher.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="FXAA.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RMShape.h">

@@ -14,7 +14,7 @@ const float PI = 3.14159265359;
 const float GAMMA = 2.5;
 const int MAX_BOUNCES = 2;
 const int MAX_SAMPLES = 1;
-const float SHADOW_STRENGTH = 0;
+const float SHADOW_STRENGTH = 0.5;
 const int AO_STEP_SIZE = 1;
 
 // Shape types
@@ -439,7 +439,7 @@ vec4 getLight(vec3 p, int lightID, vec4 color) {
     lightPos = rotateXYZ(vec3(0, mod(time, 2 * PI), 0)) * lightPos;
     vec3 l = normalize(lightPos - p);
     vec3 n = getNormal(p);
-    float dif = clamp(dot(n, l), 0., 1.);
+    float dif = clamp(dot(n, l), SHADOW_STRENGTH, 1.);
     
     // Diffuse lighting and shadows
     float m = SceneSDF(p).metallic;
@@ -526,7 +526,7 @@ void main() {
     difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
     difCol *= shade * ao;
 
-    vec4 bufCol = texture2D(buff, gl_FragCoord.xy / windowDimensions);
+    vec4 bufCol = texture(buff, gl_FragCoord.xy / windowDimensions);
     difCol.rgb = mix(difCol.rgb, bufCol.rgb, 0.5);
 
     difCol.a = 1;

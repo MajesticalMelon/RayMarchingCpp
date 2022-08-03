@@ -28,6 +28,10 @@ int main() {
 	// Send initial size to shader
 	rayMarchingShader.setUniform("windowDimensions", window.getView().getSize());
 
+	Shader fxaaShader;
+	fxaaShader.loadFromFile("FXAA.frag", Shader::Type::Fragment);
+	fxaaShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
+
 	// Load texture(s)
 	Texture skybox;
 	skybox.loadFromFile("alps_field_4k.hdr");
@@ -70,6 +74,7 @@ int main() {
 			// Dynamically change the size of the window
 			if (event.type == Event::Resized) {
 				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
+				fxaaShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
 				screen.setSize(sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
 				buffer.create(window.getSize().x, window.getSize().y);
 			}
@@ -94,6 +99,10 @@ int main() {
 
 		// End the frame and actually draw it to the window
 		window.display();
+
+		/*window.clear();
+		window.draw(Sprite(buffer), &fxaaShader);
+		window.display();*/
 
 		// Update here
 		update(&deltaClock);
