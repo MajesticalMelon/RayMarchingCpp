@@ -114,9 +114,6 @@ void init() {
 }
 
 void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {
-	// Send camera's position and rotation to the shader
-	shader->setUniform("camPosition", position);
-	shader->setUniform("camRotation", rotation);
 
 	// Send variables to the shader
 	shader->setUniform("camPosition", position);
