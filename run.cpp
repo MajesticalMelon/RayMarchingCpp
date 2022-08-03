@@ -13,8 +13,9 @@
 using namespace sf;
 
 int main() {
+	// Scene window
 	std::cout << "Creating Window" << std::endl;
-	RenderWindow window(VideoMode(800, 600), "Ray Marcher");
+	RenderWindow window(VideoMode(1000, 750), "Ray Marcher");
 
 	// Inputs
 	short userInput = rm::None;
@@ -27,14 +28,23 @@ int main() {
 	// Send initial size to shader
 	rayMarchingShader.setUniform("windowDimensions", window.getView().getSize());
 
-	// Load texture
-	Texture testTexture;
-	testTexture.loadFromFile("alps_field_4k.hdr");
-	rayMarchingShader.setUniform("skybox", testTexture);
+	// Load texture(s)
+	Texture skybox;
+	skybox.loadFromFile("alps_field_4k.hdr");
+	rayMarchingShader.setUniform("skybox", skybox);
+
+	// Buffer texture for progressive rendering
+	Texture buffer;
+	buffer.create(window.getSize().x, window.getSize().y);
+	buffer.update(window);
+	rayMarchingShader.setUniform("buff", buffer);
 
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
-	RectangleShape screen(Vector2f((float)window.getSize().x, (float)window.getSize().y));
+	RectangleShape screen(Vector2f(
+		(float)window.getSize().x, 
+		(float)window.getSize().y
+	));
 
 	// Clock
 	Clock gameClock;
@@ -61,6 +71,7 @@ int main() {
 			if (event.type == Event::Resized) {
 				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
 				screen.setSize(sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
+				buffer.create(window.getSize().x, window.getSize().y);
 			}
 
 			// Go in the direction that was pressed
@@ -73,6 +84,10 @@ int main() {
 				keyReleased(&event);
 			}
 		}
+
+		// Update the buffer
+		buffer.update(window);
+		rayMarchingShader.setUniform("buff", buffer);
 
 		// Draw the scene
 		draw(&window, &rayMarchingShader, screen);
