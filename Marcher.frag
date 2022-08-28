@@ -12,7 +12,7 @@ const float TOLERANCE = 0.001;
 const int MAX_STEPS = 500;
 const float PI = 3.14159265359;
 const float GAMMA = 2.5;
-const int MAX_BOUNCES = 2;
+const int MAX_BOUNCES = 0;
 const int MAX_SAMPLES = 1;
 const float SHADOW_STRENGTH = 0.5;
 const int AO_STEP_SIZE = 1;
@@ -489,7 +489,8 @@ void main() {
     vec4 accCol = vec4(0);
     vec4 indCol = vec4(0);
     vec3 sn = getNormal(pos);
-        vec3 refd = reflect(rd, sn);
+    vec3 refd = reflect(rd, sn);
+    for (int j = 0; j < MAX_BOUNCES; j++) {
     for (int i = 0; i < MAX_SAMPLES && scene.metallic > TOLERANCE; i++) {
          // Don't need multiple samples if roughness is 0
         if (scene.roughness < TOLERANCE) {
@@ -521,13 +522,14 @@ void main() {
         vec3 refpos = pos + randd * dist;
         accCol += indCol * getLight(refpos, 0, indCol);
     }
+    }
 
-    accCol /= MAX_SAMPLES;
+    accCol /= MAX_SAMPLES * MAX_BOUNCES;
     difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
     difCol *= shade * ao;
 
-    vec4 bufCol = texture(buff, gl_FragCoord.xy / windowDimensions);
-    difCol.rgb = mix(difCol.rgb, bufCol.rgb, 0.5);
+//    vec4 bufCol = texture(buff, gl_FragCoord.xy / windowDimensions);
+//    difCol.rgb = mix(difCol.rgb, bufCol.rgb, 0.5);
 
     difCol.a = 1;
 	FragColor = difCol;

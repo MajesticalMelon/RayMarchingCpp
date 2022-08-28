@@ -91,8 +91,8 @@ int main() {
 		}
 
 		// Update the buffer
-		buffer.update(window);
-		rayMarchingShader.setUniform("buff", buffer);
+		//buffer.update(window);
+		//rayMarchingShader.setUniform("buff", buffer);
 
 		// Draw the scene
 		draw(&window, &rayMarchingShader, screen);
