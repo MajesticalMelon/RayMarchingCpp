@@ -7,6 +7,23 @@ using namespace sf::Glsl;
 #include "RMEnums.h"
 
 namespace rm {
+    
+    namespace VectorHelper {
+        float length(Vec3 p);
+
+        Vec3 vectorAbs(Vec3 p);
+
+        Vec3 vectorMax(Vec3 p, Vec3 q);
+
+        Vec3 vectorMin(Vec3 p, Vec3 q);
+
+        float dot(Vec3 p, Vec3 q);
+
+        float clamp(float val, float low, float high);
+
+        Vec3 normalize(Vec3 p);
+    }
+
     class RMShape {
     private:
         Vec3 position;
@@ -27,6 +44,7 @@ namespace rm {
 
         void setType(ShapeType t);
         void setOperation(Operation t, RMShape* opd);
+
     public:
         RMShape();
 
@@ -54,6 +72,9 @@ namespace rm {
         Vec3 getParam2();
         rm::ShapeType getType();
         int getIndex();
+
+        float getSignedDistance(Vec3 p);
+        Vec3 getNormal(Vec3 p);
 
         static std::vector<RMShape*> shapes;
 

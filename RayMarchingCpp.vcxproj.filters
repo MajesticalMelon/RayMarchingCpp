@@ -27,9 +27,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VerletObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Marcher.frag" />
+    <None Include="alps_field_4k.hdr">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Marcher.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="FXAA.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RMShape.h">
@@ -42,6 +51,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VerletObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VerletSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

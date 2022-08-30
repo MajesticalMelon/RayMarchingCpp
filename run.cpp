@@ -13,8 +13,9 @@
 using namespace sf;
 
 int main() {
+	// Scene window
 	std::cout << "Creating Window" << std::endl;
-	RenderWindow window(VideoMode(800, 600), "Ray Marcher");
+	RenderWindow window(VideoMode(1000, 750), "Ray Marcher");
 
 	// Inputs
 	short userInput = rm::None;
@@ -27,19 +28,31 @@ int main() {
 	// Send initial size to shader
 	rayMarchingShader.setUniform("windowDimensions", window.getView().getSize());
 
-	// Load texture
-	Texture testTexture;
-	testTexture.loadFromFile("testTexture.jpg");
-	rayMarchingShader.setUniform("testTexture", testTexture);
+	Shader fxaaShader;
+	fxaaShader.loadFromFile("FXAA.frag", Shader::Type::Fragment);
+	fxaaShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
+
+	// Load texture(s)
+	Texture skybox;
+	skybox.loadFromFile("alps_field_4k.hdr");
+	rayMarchingShader.setUniform("skybox", skybox);
+
+	// Buffer texture for progressive rendering
+	Texture buffer;
+	buffer.create(window.getSize().x, window.getSize().y);
+	buffer.update(window);
+	rayMarchingShader.setUniform("buff", buffer);
 
 	std::cout << "Begin Drawing" << std::endl;
 	// Some shapes
-	RectangleShape screen(Vector2f(window.getSize().x, window.getSize().y));
+	RectangleShape screen(Vector2f(
+		(float)window.getSize().x, 
+		(float)window.getSize().y
+	));
 
 	// Clock
 	Clock gameClock;
 	Clock deltaClock;
-	float deltaTime = 0;
 
 	// Initializes global variable within main.cpp before starting
 	init();
@@ -61,7 +74,9 @@ int main() {
 			// Dynamically change the size of the window
 			if (event.type == Event::Resized) {
 				rayMarchingShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
-				screen.setSize(sf::Vector2f(window.getSize().x, window.getSize().y));
+				fxaaShader.setUniform("windowDimensions", sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
+				screen.setSize(sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
+				buffer.create(window.getSize().x, window.getSize().y);
 			}
 
 			// Go in the direction that was pressed
@@ -75,20 +90,31 @@ int main() {
 			}
 		}
 
+		// Update the buffer
+		//buffer.update(window);
+		//rayMarchingShader.setUniform("buff", buffer);
+
 		// Draw the scene
 		draw(&window, &rayMarchingShader, screen);
 
 		// End the frame and actually draw it to the window
 		window.display();
 
+		/*window.clear();
+		window.draw(Sprite(buffer), &fxaaShader);
+		window.display();*/
+
 		// Update here
 		update(&deltaClock);
+
 
 		// Reset clock for calculating delta time
 		deltaClock.restart();
 
 		// Send the current running time to the shader
 		rayMarchingShader.setUniform("time", gameClock.getElapsedTime().asSeconds());
+		rayMarchingShader.setUniform("deltaTime", deltaClock.getElapsedTime().asSeconds());
+
 	}
 
 	// Cleanup any shapes that were created

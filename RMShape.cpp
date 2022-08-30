@@ -2,6 +2,35 @@
 
 #include "Rotations.h"
 
+float rm::VectorHelper::length(Vec3 p) {
+    return sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
+}
+
+Vec3 rm::VectorHelper::vectorAbs(Vec3 p) {
+    return Vec3(abs(p.x), abs(p.y), abs(p.z));
+}
+
+Vec3 rm::VectorHelper::vectorMax(Vec3 p, Vec3 q) {
+    return Vec3(fmax(p.x, q.x), fmax(p.y, q.y), fmax(p.z, q.z));
+}
+
+Vec3 rm::VectorHelper::vectorMin(Vec3 p, Vec3 q) {
+    return Vec3(fmin(p.x, q.x), fmin(p.y, q.y), fmin(p.z, q.z));
+}
+
+float rm::VectorHelper::dot(Vec3 p, Vec3 q) {
+    return p.x * q.x + p.y * q.y + p.z * q.z;
+}
+
+float rm::VectorHelper::clamp(float val, float low, float high) {
+    return fmax(fmin(val, high), low);
+}
+
+Vec3 rm::VectorHelper::normalize(Vec3 p) {
+    p /= length(p);
+    return p;
+}
+
 std::vector<rm::RMShape*> rm::RMShape::shapes;
 
 rm::RMShape::RMShape() {
@@ -19,7 +48,7 @@ rm::RMShape::RMShape() {
 
     // Keeping track of the shape
     index = rm::RMShape::shapes.size();
-    type = rm::Invalid; // Default to sphere because there is no 'null' shape
+    type = rm::Invalid; // Doesn't get drawn
 
     // Save this shape
     rm::RMShape::shapes.push_back(this);
@@ -192,4 +221,62 @@ rm::ShapeType rm::RMShape::getType() {
 
 int rm::RMShape::getIndex() {
     return index;
+}
+
+float rm::RMShape::getSignedDistance(Vec3 p)
+{
+    float signedDistance;
+    p = inverseRotatXYZ(p - position, rotation);
+
+    switch (type) {
+    case rm::Invalid:
+        signedDistance = 0.f;
+        break;
+
+    case rm::Sphere:
+        signedDistance = VectorHelper::length(p) - param1.x;
+        break;
+
+    case rm::Box:
+    {
+        Vec3 q = Vec3(abs(p.x), abs(p.y), abs(p.z)) - param1;
+        signedDistance = VectorHelper::length(VectorHelper::vectorMax(q, Vec3(0, 0, 0))) + fmin(fmax(q.x, fmax(q.y, q.z)), 0.);
+    }
+        break;
+
+    case rm::Capsule:
+    {
+        Vec3 pa = p - position;
+        Vec3 ba = param1 - position;
+        float h = VectorHelper::clamp(VectorHelper::dot(pa, ba) / VectorHelper::dot(ba, ba), 0.0, 1.0);
+        signedDistance = VectorHelper::length(pa - ba * h) - param2.x;
+    }
+        break;
+
+    case rm::Plane:
+    {
+        Vec3 n = VectorHelper::normalize(param1);
+        signedDistance = VectorHelper::dot(p, n) + param2.x;
+    }
+        break;
+
+    default:
+        signedDistance = 0.f;
+        break;
+    }
+
+    return signedDistance;
+}
+
+Vec3 rm::RMShape::getNormal(Vec3 p)
+{
+    float dist = getSignedDistance(p);
+
+    Vec3 n = Vec3(dist, dist, dist) - Vec3(
+        getSignedDistance({ p.x - 0.01f, p.y, p.z }),
+        getSignedDistance({ p.x, p.y - 0.01f, p.z }),
+        getSignedDistance({ p.x, p.y, p.z - 0.01f })
+    );
+
+    return VectorHelper::normalize(n);
 }
