@@ -100,10 +100,6 @@ int main() {
 		// End the frame and actually draw it to the window
 		window.display();
 
-		/*window.clear();
-		window.draw(Sprite(buffer), &fxaaShader);
-		window.display();*/
-
 		// Update here
 		update(&deltaClock);
 
