@@ -151,7 +151,7 @@ void update(sf::Clock* gameClock) {
 	right = rotateXYZ(sf::Vector3f(1, 0, 0), sf::Vector3f(0, rotation.y, 0));
 	forward = rotateXYZ(sf::Vector3f(0, 0, 1), sf::Vector3f(0, rotation.y, 0));
 
-	sf::Glsl::Vec3 spherePos = sphere1->getPosition();
+	/*sf::Glsl::Vec3 spherePos = sphere1->getPosition();
 	spherePos.x = -1.5f + cosf(0.5f * gameTime);
 	sphere1->setPosition(spherePos);
 
@@ -159,7 +159,7 @@ void update(sf::Clock* gameClock) {
 		0,
 		gameTime,
 		0
-	));
+	));*/
 
 	// Physics updates
 	//VerletSolver::update(deltaTime);

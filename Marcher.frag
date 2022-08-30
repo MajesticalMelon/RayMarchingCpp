@@ -12,7 +12,7 @@ const float TOLERANCE = 0.001;
 const int MAX_STEPS = 500;
 const float PI = 3.14159265359;
 const float GAMMA = 2.5;
-const int MAX_BOUNCES = 0;
+const int MAX_BOUNCES = 1;
 const int MAX_SAMPLES = 1;
 const float SHADOW_STRENGTH = 0.5;
 const int AO_STEP_SIZE = 1;
@@ -309,11 +309,11 @@ Shape SceneSDF(vec3 p) {
     }
 
     if (scene.type == BOX) {
-        scene.roughness = 0.2;
-        scene.metallic = 0.2;
-    } else if (scene.type == PLANE) {
         scene.roughness = 0.;
-        scene.metallic = 0.5;
+        scene.metallic = 1.;
+    } else if (scene.type == PLANE) {
+        scene.roughness = 1.;
+        scene.metallic = 0;
     } else if (scene.type != 0) {
         scene.roughness = 0.7;
         scene.metallic = 0.9;
@@ -491,45 +491,43 @@ void main() {
     vec3 sn = getNormal(pos);
     vec3 refd = reflect(rd, sn);
     for (int j = 0; j < MAX_BOUNCES; j++) {
-    for (int i = 0; i < MAX_SAMPLES && scene.metallic > TOLERANCE; i++) {
-         // Don't need multiple samples if roughness is 0
-        if (scene.roughness < TOLERANCE) {
-            dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
-            accCol += indCol * getLight(pos + refd * dist, 0, indCol);
-            accCol *= MAX_SAMPLES;
-            break;
+        for (int i = 0; i < MAX_SAMPLES && scene.metallic > TOLERANCE; i++) {
+             // Don't need multiple samples if roughness is 0
+            if (scene.roughness < TOLERANCE) {
+                dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
+                accCol += indCol * getLight(pos + refd * dist, 0, indCol);
+                accCol *= MAX_SAMPLES;
+                break;
+            }
+
+            refd = sn + (refd - sn) * scene.roughness;
+            vec3 rot = vec3(
+                rand(vec2(time / pos.x, deltaTime)), 
+                rand(vec2(pos.x / pos.y * deltaTime, time / deltaTime)), 
+                rand(vec2(deltaTime * pos.z, length(pos)))
+            ) - 0.5;
+
+            // Scale between -PI / 2 and PI / 2 then by roughness
+            rot *= 2;
+            rot *= PI / 2;
+            rot *= scene.roughness;
+            vec3 randd = normalize(rotateXYZ(rot) * refd);
+            dist = RayMarch(pos + sn * TOLERANCE * 2, randd, indCol);
+
+            if (indCol.a < 0) {
+                indCol = scene.color;
+                indCol.a = 1;
+            }
+
+            vec3 refpos = pos + randd * dist;
+            accCol += indCol * getLight(refpos, 0, indCol) * SceneSDF(refpos).metallic;
         }
-
-        refd = sn + (refd - sn) * scene.roughness;
-        vec3 rot = vec3(
-            rand(vec2(time / pos.x, deltaTime)), 
-            rand(vec2(pos.x / pos.y * deltaTime, time / deltaTime)), 
-            rand(vec2(deltaTime * pos.z, length(pos)))
-        ) - 0.5;
-
-        // Scale between -PI / 2 and PI / 2 then by roughness
-        rot *= 2;
-        rot *= PI / 2;
-        rot *= scene.roughness;
-        vec3 randd = normalize(rotateXYZ(rot) * refd);
-        dist = RayMarch(pos + sn * TOLERANCE * 2, randd, indCol);
-
-        if (indCol.a < 0) {
-            indCol = scene.color;
-            indCol.a = 1;
-        }
-
-        vec3 refpos = pos + randd * dist;
-        accCol += indCol * getLight(refpos, 0, indCol);
-    }
     }
 
     accCol /= MAX_SAMPLES * MAX_BOUNCES;
-    difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
+    //difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
+    difCol += accCol;
     difCol *= shade * ao;
-
-//    vec4 bufCol = texture(buff, gl_FragCoord.xy / windowDimensions);
-//    difCol.rgb = mix(difCol.rgb, bufCol.rgb, 0.5);
 
     difCol.a = 1;
 	FragColor = difCol;
