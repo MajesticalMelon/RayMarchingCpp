@@ -309,8 +309,8 @@ Shape SceneSDF(vec3 p) {
     }
 
     if (scene.type == BOX) {
-        scene.roughness = 0.;
-        scene.metallic = 1.;
+        scene.roughness = 0.1;
+        scene.metallic = 0.5;
     } else if (scene.type == PLANE) {
         scene.roughness = 1.;
         scene.metallic = 0;
