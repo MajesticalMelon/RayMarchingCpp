@@ -525,8 +525,7 @@ void main() {
     }
 
     accCol /= MAX_SAMPLES * MAX_BOUNCES;
-    //difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
-    difCol += accCol;
+    difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
     difCol *= shade * ao;
 
     difCol.a = 1;
