@@ -9,6 +9,6 @@ void keyPressed(sf::Event* event);
 
 void keyReleased(sf::Event* event);
 
-void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen);
+void draw(sf::Shader* shader, sf::RectangleShape screen);
 
 void update(sf::Clock* gameClock);

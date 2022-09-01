@@ -16,6 +16,9 @@ int main() {
 	// Scene window
 	std::cout << "Creating Window" << std::endl;
 	RenderWindow window(VideoMode(1000, 750), "Ray Marcher");
+	RenderTexture scene;
+	scene.create(window.getSize().x, window.getSize().y);
+	scene.clear(Color::Black);
 
 	// Inputs
 	short userInput = rm::None;
@@ -92,12 +95,17 @@ int main() {
 
 		// Update the buffer
 		//buffer.update(window);
-		//rayMarchingShader.setUniform("buff", buffer);
+		rayMarchingShader.setUniform("buff", scene.getTexture());
 
-		// Draw the scene
-		draw(&window, &rayMarchingShader, screen);
+		// Draw the scene (Sends objects to the shader)
+		draw(&rayMarchingShader, screen);
+
+		// Ray march
+		scene.draw(screen, &rayMarchingShader);
 
 		// End the frame and actually draw it to the window
+		window.clear(Color::Black);
+		window.draw(Sprite(scene.getTexture()));
 		window.display();
 
 		// Update here

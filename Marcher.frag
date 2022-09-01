@@ -466,7 +466,7 @@ float aoMarch(vec3 p) {
 void main() {
     vec2 uv = (2 * gl_FragCoord.xy - windowDimensions.xy) / windowDimensions.y;
 
-    vec3 rd = normalize(vec3(uv.x, uv.y, 1.5));
+    vec3 rd = normalize(vec3(uv.x, -uv.y, 1.5));
     rd = rotateXYZ(camRotation) * rd;
 
     float dist = RayMarch(camPosition, rd, difCol);
@@ -529,5 +529,7 @@ void main() {
     difCol *= shade * ao;
 
     difCol.a = 1;
-	FragColor = difCol;
+    vec4 bufCol = texture2D(buff, gl_FragCoord.xy / windowDimensions.xy);
+	FragColor = (difCol + bufCol) / 2;
+    
 }

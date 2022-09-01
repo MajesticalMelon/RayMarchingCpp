@@ -113,14 +113,11 @@ void init() {
 	printf("%f\n", box1->getSignedDistance(Vec3()));
 }
 
-void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape screen) {
+void draw(sf::Shader* shader, sf::RectangleShape screen) {
 
 	// Send variables to the shader
 	shader->setUniform("camPosition", position);
 	shader->setUniform("camRotation", rotation);
-
-	// Draw the background color
-	window->clear();
 
 	// Start drawing here (Gets redrawn every frame so positions could be modified)
 	box1->draw(shader);
@@ -134,9 +131,6 @@ void draw(sf::RenderWindow* window, sf::Shader* shader, sf::RectangleShape scree
 	box2->draw(shader);
 
 	ground->draw(shader);
-
-	// End drawing here
-	window->draw(screen, shader);
 }
 
 void update(sf::Clock* gameClock) {
