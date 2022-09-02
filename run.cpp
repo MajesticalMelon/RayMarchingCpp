@@ -21,6 +21,7 @@ int main() {
 	scene.clear(Color::Black);
 
 	// Inputs
+	// He He
 	short userInput = rm::None;
 
 	// Ray marcher
