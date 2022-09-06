@@ -497,7 +497,8 @@ void main() {
                 dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
                 accCol += indCol * getLight(pos + refd * dist, 0, indCol);
                 accCol *= MAX_SAMPLES;
-                break;
+                i = MAX_SAMPLES;
+                continue;
             }
 
             refd = sn + (refd - sn) * scene.roughness;
@@ -514,7 +515,7 @@ void main() {
             vec3 randd = normalize(rotateXYZ(rot) * refd);
             dist = RayMarch(pos + sn * TOLERANCE * 2, randd, indCol);
 
-            if (indCol.a < 0) {
+            if (indCol.a < TOLERANCE) {
                 indCol = scene.color;
                 indCol.a = 1;
             }
