@@ -495,7 +495,7 @@ void main() {
              // Don't need multiple samples if roughness is 0
             if (scene.roughness < TOLERANCE) {
                 dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
-                accCol += indCol * getLight(pos + refd * dist, 0, indCol);
+                accCol += indCol * getLight(pos + refd * dist, 0, indCol) * SceneSDF(pos + refd * dist).metallic;
                 accCol *= MAX_SAMPLES;
                 i = MAX_SAMPLES;
                 continue;
