@@ -92,23 +92,7 @@ struct Shape {
     bool emissive;
 };
 
-struct Sphere {
-    Shape base;
-    float radius;
-};
-
-struct Box {
-    Shape base;
-    vec3 size;
-};
-
 uniform Shape shapes[20];
-
-uniform Sphere spheres[10];
-uniform int numSpheres = 0;
-
-uniform Box boxes[10];
-uniform int numBoxes = 0;
 
 uniform vec3 lights[2] = { vec3(0, 1000., 0), vec3(-5, 2, 3) };
 
@@ -290,6 +274,7 @@ Shape SceneSDF(vec3 p) {
     scene.type = 0;
     scene.metallic = 0;
     scene.roughness = 0;
+    scene.emissive = false;
 
     Shape check;
 
@@ -317,20 +302,6 @@ Shape SceneSDF(vec3 p) {
 
         scene = CheckScene(scene, check);
     }
-
-    if (scene.type == BOX) {
-        scene.roughness = 0.1;
-        scene.metallic = 0.5;
-    } else if (scene.type == PLANE) {
-        scene.roughness = 0.;
-        scene.metallic = 0.1;
-    } else if (scene.type != 0) {
-        scene.roughness = 0.7;
-        scene.metallic = 0.;
-        //scene.color = GetColorFromTexture(p, scene, testTex);
-    }
-
-    scene.emissive = false;
 
 	return scene;
 }

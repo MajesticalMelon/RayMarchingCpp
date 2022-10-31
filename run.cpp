@@ -1,6 +1,9 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
+#include <imgui.h>
+#include <imgui-SFML.h>
+
 #include <iostream>
 #include <conio.h>
 
@@ -20,8 +23,10 @@ int main() {
 	scene.create(window.getSize().x, window.getSize().y);
 	scene.clear(Color::Black);
 
+	// Initialize ImGui
+	ImGui::SFML::Init(window);
+
 	// Inputs
-	// He He
 	short userInput = rm::None;
 
 	// Ray marcher
@@ -71,6 +76,8 @@ int main() {
 	while (window.isOpen()) {
 
 		while (window.pollEvent(event)) {
+			ImGui::SFML::ProcessEvent(window, event);
+
 			if (event.type == Event::Closed) {
 				window.close();
 			}
@@ -112,6 +119,12 @@ int main() {
 			}
 		}
 
+		ImGui::SFML::Update(window, deltaClock.getElapsedTime());
+
+		ImGui::Begin("Hello, world!");
+		ImGui::Button("A Button");
+		ImGui::End();
+
 		// Update the buffer
 		//buffer.update(window);
 		rayMarchingShader.setUniform("buff", scene.getTexture());
@@ -125,11 +138,13 @@ int main() {
 		// End the frame and actually draw it to the window
 		window.clear(Color::Black);
 		window.draw(Sprite(scene.getTexture()));
+		ImGui::SFML::Render(window);
+
 		window.display();
+
 
 		// Update here
 		update(&deltaClock);
-
 
 		// Reset clock for calculating delta time
 		deltaClock.restart();
@@ -144,4 +159,6 @@ int main() {
 	for (rm::RMShape* s : rm::RMShape::shapes) {
 		delete s;
 	}
+
+	ImGui::SFML::Shutdown();
 }

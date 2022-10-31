@@ -9,7 +9,7 @@ VerletObject::VerletObject(Vector3f pos, bool _isStatic)
 	velocity = Vector3f();
 	acceleration = Vector3f();
 	// Default collider is a sphere
-	collider = rm::RMShape::createSphere(pos, { 0, 0, 0 }, { 1, 0, 0, 1 }, 1);
+	collider = rm::RMShape::createSphere(pos, { 0, 0, 0 }, 1);
 
 	isStatic = _isStatic;
 

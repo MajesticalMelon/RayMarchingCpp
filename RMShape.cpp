@@ -2,6 +2,8 @@
 
 #include "Rotations.h"
 
+
+#pragma region Vector Math
 float rm::VectorHelper::length(Vec3 p) {
     return sqrtf(p.x * p.x + p.y * p.y + p.z * p.z);
 }
@@ -31,12 +33,15 @@ Vec3 rm::VectorHelper::normalize(Vec3 p) {
     return p;
 }
 
+#pragma endregion
+
+#pragma region Init
 std::vector<rm::RMShape*> rm::RMShape::shapes;
+std::vector<rm::RMMaterial*> rm::RMShape::materials({ &defaultMat });
 
 rm::RMShape::RMShape() {
     position = Vec3(0, 0, 0);
     rotation = Vec3(0, 0, 0);
-    color = Vec4(0, 0, 0, 1);
     param1 = Vec3(0, 0, 0);
     param2 = Vec3(0, 0, 0);
     origin = Vec3(0, 0, 0);
@@ -49,16 +54,17 @@ rm::RMShape::RMShape() {
     // Keeping track of the shape
     index = rm::RMShape::shapes.size();
     type = rm::Invalid; // Doesn't get drawn
+    materialIndex = 0; // Default material
 
     // Save this shape
     rm::RMShape::shapes.push_back(this);
 }
+#pragma endregion
 
 // Drawing - Sending values to shader //
 void rm::RMShape::draw(sf::Shader* shader) {
     shader->setUniform("shapes[" + std::to_string(index) + "].position", position);
     shader->setUniform("shapes[" + std::to_string(index) + "].rotation", rotation);
-    shader->setUniform("shapes[" + std::to_string(index) + "].color",    color   );
     shader->setUniform("shapes[" + std::to_string(index) + "].param1",   param1  );
     shader->setUniform("shapes[" + std::to_string(index) + "].param2",   param2  );
 
@@ -68,6 +74,12 @@ void rm::RMShape::draw(sf::Shader* shader) {
 
     shader->setUniform("shapes[" + std::to_string(index) + "].type", type);
 
+    // Material properties
+    shader->setUniform("shapes[" + std::to_string(index) + "].color",     materials[materialIndex]->albedo   );
+    shader->setUniform("shapes[" + std::to_string(index) + "].roughness", materials[materialIndex]->roughness);
+    shader->setUniform("shapes[" + std::to_string(index) + "].metallic",  materials[materialIndex]->metallic );
+    shader->setUniform("shapes[" + std::to_string(index) + "].emissive",  materials[materialIndex]->emissive );
+
     // Send any shapes that are now part of this shape to the shader
     if (operandIndex > -1) {
         shapes.at(operandIndex)->draw(shader);
@@ -75,33 +87,30 @@ void rm::RMShape::draw(sf::Shader* shader) {
 }
 
 // Different Shapes
-
-rm::RMShape* rm::RMShape::createSphere(Vec3 pos, Vec3 rot, Vec4 col, float r) {
+#pragma region Shape Creation
+rm::RMShape* rm::RMShape::createSphere(Vec3 pos, Vec3 rot, float r) {
     RMShape* sphere = new RMShape();
     sphere->setPosition(pos);
     sphere->setRotation(rot);
-    sphere->setColor(col);
     sphere->setParam1(Vec3(r, 0, 0));
     sphere->setType(rm::Sphere);
 
     return sphere;
 }
 
-rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec4 col, Vec3 size) {
+rm::RMShape* rm::RMShape::createBox(Vec3 pos, Vec3 rot, Vec3 size) {
     RMShape* box = new RMShape();
     box->setPosition(pos);
     box->setRotation(rot);
-    box->setColor(col);
     box->setParam1(size);
     box->setType(rm::Box);
 
     return box;
 }
 
-rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r) {
+rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, float r) {
     RMShape* capsule = new RMShape();
     capsule->setPosition(pos1);
-    capsule->setColor(col);
     capsule->setParam1(pos2);
     capsule->setParam2(Vec3(r, 0, 0));
     capsule->setType(rm::Capsule);
@@ -109,21 +118,21 @@ rm::RMShape* rm::RMShape::createCapsule(Vec3 pos1, Vec3 pos2, Vec4 col, float r)
     return capsule;
 }
 
-rm::RMShape* rm::RMShape::createPlane(Vec3 pos, Vec3 rot, Vec4 col, Vec3 n, float h) {
+rm::RMShape* rm::RMShape::createPlane(Vec3 pos, Vec3 rot, Vec3 n, float h) {
     RMShape* plane = new RMShape();
     plane->setPosition(pos);
     plane->setRotation(rot);
-    plane->setColor(col);
     plane->setParam1(n);
     plane->setParam2(Vec3(h, 0, 0));
     plane->setType(rm::Plane);
 
     return plane;
 }
+#pragma endregion
 
 // Different Operations //
 // Mostly jsut a wrapper around the setOperation function
-
+#pragma region Shape Operations
 void rm::RMShape::combine(rm::RMShape* opd) {
     setOperation(rm::Union, opd);
 }
@@ -148,6 +157,9 @@ void rm::RMShape::smoothSubtract(rm::RMShape* opd) {
     setOperation(rm::SmoothSubtract, opd);
 }
 
+#pragma endregion
+
+#pragma region Setters & Getters
 // Setters //
 
 void rm::RMShape::setPosition(Vec3 pos) {
@@ -163,7 +175,7 @@ void rm::RMShape::setRotation(Vec3 rot) {
 }
 
 void rm::RMShape::setColor(Vec4 col) {
-    color = col;
+    materials[materialIndex]->albedo = col;
 }
 
 void rm::RMShape::setParam1(Vec3 p1) {
@@ -193,6 +205,19 @@ void rm::RMShape::setOrigin(Vec3 orig) {
     origin = orig;
 }
 
+void rm::RMShape::setMaterial(RMMaterial& mat) {
+    // Find mat if it exists
+    for (int i = 0; i < materials.size(); i++) {
+        if (*materials[i] == mat) {
+            materialIndex = i;
+            return;
+        }
+    }
+
+    materialIndex = materials.size();
+    materials.push_back(&mat);
+}
+
 // Getters //
 
 Vec3 rm::RMShape::getPosition() {
@@ -204,7 +229,7 @@ Vec3 rm::RMShape::getRotation() {
 }
 
 Vec4 rm::RMShape::getColor() {
-    return color;
+    return materials[materialIndex]->albedo;
 }
 
 Vec3 rm::RMShape::getParam1() {
@@ -279,4 +304,14 @@ Vec3 rm::RMShape::getNormal(Vec3 p)
     );
 
     return VectorHelper::normalize(n);
+}
+
+const rm::RMMaterial& rm::RMShape::getMaterial() {
+    return *materials[materialIndex];
+}
+#pragma endregion
+
+bool rm::RMMaterial::operator==(RMMaterial const& mat)
+{
+    return this == &mat;
 }

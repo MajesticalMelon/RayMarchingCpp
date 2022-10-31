@@ -36,6 +36,15 @@ rm::RMShape* ground;
 rm::RMShape* sphere3;
 rm::RMShape* box2;
 
+// Materials
+rm::RMMaterial sphereMat1;
+rm::RMMaterial boxMat1;
+rm::RMMaterial sphereMat2;
+rm::RMMaterial lineMat;
+rm::RMMaterial groundMat;
+rm::RMMaterial sphereMat3;
+rm::RMMaterial boxMat2;
+
 // Verlet Objects
 VerletObject* testSphere;
 VerletObject* testSphere2;
@@ -57,63 +66,70 @@ void init(sf::Window* win) {
 	sphere1 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(-1.5f, 3, 0),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(cosf(5), 0, sinf(2), 0.1f),
 		0.5f
 	);
+	sphereMat1.albedo = sf::Glsl::Vec4(cosf(5), 0, sinf(2), 0.1f);
+	sphere1->setMaterial(sphereMat1);
 
 	box1 = rm::RMShape::createBox(
 		sf::Glsl::Vec3(-2, 3, 0),
 		sf::Glsl::Vec3(3, 1, 0),
-		sf::Glsl::Vec4(0, 1, 0.5f, 0.1f),
 		sf::Glsl::Vec3(1, 3, 0.2f)
 	);
+	boxMat1.albedo = sf::Glsl::Vec4(0, 1, 0.5f, 0.1f);
+	box1->setMaterial(boxMat1);
 
 	sphere2 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(0, 10, 5),
 		sf::Glsl::Vec3(1, 0, 0.5),
-		sf::Glsl::Vec4(1, 0, 0, 1),
 		2
 	);
+	sphereMat2.albedo = sf::Glsl::Vec4(1, 0, 0, 1);
+	sphere2->setMaterial(sphereMat2);
 
 	line = rm::RMShape::createCapsule(
 		sf::Glsl::Vec3(5, 0.5, 0),
 		sf::Glsl::Vec3(3, 3, 2),
-		sf::Glsl::Vec4(0.2f, 0.69f, 0.42f, 1.f),
 		0.1f
 	);
+	lineMat.albedo = sf::Glsl::Vec4(0.2f, 0.69f, 0.42f, 1.f);
+	line->setMaterial(lineMat);
 
 	ground = rm::RMShape::createPlane(
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(1, 0.65, 0.7, 1),
 		sf::Glsl::Vec3(0, 1, 0),
 		0
 	);
+	groundMat.albedo = sf::Glsl::Vec4(1, 0.65, 0.7, 1);
+	ground->setMaterial(groundMat);
 
 	sphere3 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(1, 3, 2.5f),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(0.7f, 0.2f, 0.5f, 1),
 		1.f
 	);
+	sphereMat3.albedo = sf::Glsl::Vec4(0.7f, 0.2f, 0.5f, 1);
+	sphere3->setMaterial(sphereMat3);
 
 	box2 = rm::RMShape::createBox(
 		sf::Glsl::Vec3(1, 3, 2.5f),
 		sf::Glsl::Vec3(1, 0.2f, 0.7f),
-		sf::Glsl::Vec4(0, 1, 0, 1),
 		sf::Glsl::Vec3(1, 2, 0.5f)
 	);
+	boxMat2.albedo = sf::Glsl::Vec4(0, 1, 0, 1);
+	box2->setMaterial(boxMat2);
 
-	// Form a union of sphere1 and box1
+	//// Form a union of sphere1 and box1
 	box1->smoothCombine(sphere1);
-	box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
+	//box1->setOrigin(sf::Glsl::Vec3(-5, 0, 0));
 
 	//testSphere2 = new VerletObject(sphere3);
-	testSphere = new VerletObject(sphere2);
+	/*testSphere = new VerletObject(sphere2);
 	testBox = new VerletObject(box2);
-	testPlane = new VerletObject(ground, true);
+	testPlane = new VerletObject(ground, true);*/
 
-	printf("%f\n", box1->getSignedDistance(Vec3()));
+	printf("%u\n", rm::RMShape::materials.size());
 }
 
 void draw(sf::Shader* shader, sf::RectangleShape screen) {
@@ -331,7 +347,7 @@ void mousePressed(sf::Event* event) {
 	if (event->mouseButton.button == sf::Mouse::Right) {
 		allowRotation = true;
 		sf::Mouse::setPosition({ 500, 375 }, *window);
-
+		window->setMouseCursorVisible(false);
 	}
 }
 
@@ -341,8 +357,8 @@ void mouseMoved(sf::Event* event) {
 		float rotY = event->mouseMove.x - 500;
 		float rotX = event->mouseMove.y - 375;
 
-		rotation.y += rotY / 100;
-		rotation.x += rotX / 100;
+		rotation.y += rotY / 500.f;
+		rotation.x += rotX / 500.f;
 
 		sf::Mouse::setPosition({ 500, 375 }, *window);
 	}
@@ -351,5 +367,6 @@ void mouseMoved(sf::Event* event) {
 void mouseReleased(sf::Event* event) {
 	if (event->mouseButton.button == sf::Mouse::Right) {
 		allowRotation = false;
+		window->setMouseCursorVisible(true);
 	}
 }
