@@ -67,7 +67,7 @@ void init() {
 
 	sphere2 = rm::RMShape::createSphere(
 		sf::Glsl::Vec3(0, 10, 5),
-		sf::Glsl::Vec3(0, 0, 0),
+		sf::Glsl::Vec3(1, 0, 0.5),
 		sf::Glsl::Vec4(1, 0, 0, 1),
 		2
 	);
@@ -82,7 +82,7 @@ void init() {
 	ground = rm::RMShape::createPlane(
 		sf::Glsl::Vec3(0, 0, 0),
 		sf::Glsl::Vec3(0, 0, 0),
-		sf::Glsl::Vec4(0.65, 0.65, 0.7, 1),
+		sf::Glsl::Vec4(1, 0.65, 0.7, 1),
 		sf::Glsl::Vec3(0, 1, 0),
 		0
 	);

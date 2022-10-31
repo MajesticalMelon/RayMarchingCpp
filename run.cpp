@@ -41,6 +41,10 @@ int main() {
 	skybox.loadFromFile("alps_field_4k.hdr");
 	rayMarchingShader.setUniform("skybox", skybox);
 
+	Texture testTex;
+	testTex.loadFromFile("testTexture.jpg");
+	rayMarchingShader.setUniform("testTex", testTex);
+
 	// Buffer texture for progressive rendering
 	Texture buffer;
 	buffer.create(window.getSize().x, window.getSize().y);

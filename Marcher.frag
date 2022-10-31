@@ -3,6 +3,7 @@
 uniform sampler2D tex;
 uniform sampler2D skybox;
 uniform sampler2D buff;
+uniform sampler2D testTex;
 
 out vec4 FragColor;
 
@@ -271,6 +272,15 @@ float rand(vec2 co) {
     return fract(sin(sn) * c);
 }
 
+vec4 GetColorFromTexture(vec3 p, Shape s, sampler2D inputTex) {
+    vec3 ray = normalize(p - s.position);
+    ray = ray * rotateXYZ(s.rotation);
+    vec2 uv;
+    uv.x = 0.5 + atan(ray.x, ray.z)/(2 * PI);
+    uv.y = 0.5 - asin(ray.y) / PI;
+    return texture2D(inputTex, uv);
+}
+
 Shape SceneSDF(vec3 p) {
 
     Shape scene;
@@ -312,11 +322,12 @@ Shape SceneSDF(vec3 p) {
         scene.roughness = 0.1;
         scene.metallic = 0.5;
     } else if (scene.type == PLANE) {
-        scene.roughness = 1.;
-        scene.metallic = 0;
+        scene.roughness = 0.;
+        scene.metallic = 0.1;
     } else if (scene.type != 0) {
         scene.roughness = 0.7;
-        scene.metallic = 0.9;
+        scene.metallic = 0.;
+        //scene.color = GetColorFromTexture(p, scene, testTex);
     }
 
     scene.emissive = false;
@@ -382,7 +393,7 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
 }
 
 // Used for proper lighting & shading
-vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
+float lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
     float distTotal = 0;
     float res = 1.;
     vec4 accCol = vec4(0, 0, 0, 1);
@@ -395,7 +406,7 @@ vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
         float dist = scene.signedDistance;
 
         if (dist < TOLERANCE) {
-            return vec3(SHADOW_STRENGTH);
+            return SHADOW_STRENGTH;
             if (scene.color.a > 1 - TOLERANCE) {
                 
             }
@@ -408,7 +419,7 @@ vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
                 distTotal += TOLERANCE * 10;
 
             if (accCol.a < TOLERANCE) {
-                return baseCol.rgb * (1. - scene.color.a) + scene.color.a * accCol.rgb;
+                return res;
             }
 
             alpha = scene.color.a;
@@ -419,19 +430,19 @@ vec3 lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
         distTotal += abs(dist);
 
         if (distTotal > length(lights[lightID] - ro)) {
-            return vec3(res);
+            return res;
         }
 
         //if (distTotal > MAX_DISTANCE) break;
     }
 
-    return vec3(res);
+    return res;
 }
 
-vec4 getLight(vec3 p, int lightID, vec4 color) {
+float getLight(vec3 p, int lightID, vec4 color) {
     // Allows the skybox to be unaffected by lighting
     if (length(p - camPosition) > MAX_DISTANCE - TOLERANCE) {
-        return color;
+        return 1;
     }
     
     vec3 lightPos = vec3(p.x, 100, p.z);
@@ -442,12 +453,9 @@ vec4 getLight(vec3 p, int lightID, vec4 color) {
     float dif = clamp(dot(n, l), SHADOW_STRENGTH, 1.);
     
     // Diffuse lighting and shadows
-    float m = SceneSDF(p).metallic;
-    vec3 lightCol = lightMarch(p + n * TOLERANCE * 2, l, lightID, 28);
-    color.rgb = lightCol * dif;
-    color.a = 1; // Just in case
+    float light = lightMarch(p + n * TOLERANCE * 2, l, lightID, 28);
 
-    return color;
+    return light * dif;
 }
 
 float aoMarch(vec3 p) {
@@ -480,7 +488,7 @@ void main() {
     }
 
     float ao = aoMarch(pos);
-    vec4 shade = getLight(pos, 0, difCol);
+    float shade = getLight(pos, 0, difCol);
 
     Shape scene = SceneSDF(pos);
 
@@ -489,48 +497,24 @@ void main() {
     vec4 accCol = vec4(0);
     vec4 indCol = vec4(0);
     vec3 sn = getNormal(pos);
-    vec3 refd = reflect(rd, sn);
-    for (int j = 0; j < MAX_BOUNCES; j++) {
-        for (int i = 0; i < MAX_SAMPLES && scene.metallic > TOLERANCE; i++) {
-             // Don't need multiple samples if roughness is 0
-            if (scene.roughness < TOLERANCE) {
-                dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
-                accCol += indCol * getLight(pos + refd * dist, 0, indCol) * SceneSDF(pos + refd * dist).metallic;
-                accCol *= MAX_SAMPLES;
-                i = MAX_SAMPLES;
-                continue;
-            }
-
-            refd = sn + (refd - sn) * scene.roughness;
-            vec3 rot = vec3(
-                rand(vec2(time / pos.x, deltaTime)), 
-                rand(vec2(pos.x / pos.y * deltaTime, time / deltaTime)), 
-                rand(vec2(deltaTime * pos.z, length(pos)))
+    vec3 random = vec3(
+                rand(pos.xy) + time, 
+                rand(pos.yz) + time, 
+                rand(pos.xz) + time
             ) - 0.5;
+    random *= scene.roughness;
+    vec3 refd = reflect(rd, sn + random);
+    dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
+    vec3 refpos = pos + refd * dist;
 
-            // Scale between -PI / 2 and PI / 2 then by roughness
-            rot *= 2;
-            rot *= PI / 2;
-            rot *= scene.roughness;
-            vec3 randd = normalize(rotateXYZ(rot) * refd);
-            dist = RayMarch(pos + sn * TOLERANCE * 2, randd, indCol);
+    float indShade = getLight(refpos, 0, indCol);
+    //indCol.a = SceneSDF(refpos).metallic;
+    accCol += vec4(vec3(indShade), 1.) * indCol;
 
-            if (indCol.a < TOLERANCE) {
-                indCol = scene.color;
-                indCol.a = 1;
-            }
-
-            vec3 refpos = pos + randd * dist;
-            accCol += indCol * getLight(refpos, 0, indCol) * SceneSDF(refpos).metallic;
-        }
-    }
-
-    accCol /= MAX_SAMPLES * MAX_BOUNCES;
-    difCol = difCol * (1 - scene.metallic) + accCol * scene.metallic;
+    difCol = mix(difCol, accCol, scene.metallic);
     difCol *= shade * ao;
 
     difCol.a = 1;
     vec4 bufCol = texture2D(buff, gl_FragCoord.xy / windowDimensions.xy);
-	FragColor = (difCol + bufCol) / 2;
-    
+	FragColor = difCol;
 }
