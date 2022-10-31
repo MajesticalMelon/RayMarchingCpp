@@ -24,6 +24,8 @@ sf::Vector3f forward(0, 0, 1);
 // Camera variables
 float walkScalar = 3;
 float rotateScalar = 0.7f;
+bool allowRotation = false;
+sf::Window* window;
 
 // Shapes
 rm::RMShape* sphere1;
@@ -45,7 +47,8 @@ VerletObject* wall3;
 VerletObject* wall4;
 
 // Initilization of global variables
-void init() {
+void init(sf::Window* win) {
+	window = win;
 	gameTime = 0;
 
 	userInput = rm::None;
@@ -321,5 +324,32 @@ void keyReleased(sf::Event* event) {
 	if (event->key.code == sf::Keyboard::Down) {
 		userInput -= rm::LookDown;
 		return;
+	}
+}
+
+void mousePressed(sf::Event* event) {
+	if (event->mouseButton.button == sf::Mouse::Right) {
+		allowRotation = true;
+		sf::Mouse::setPosition({ 500, 375 }, *window);
+
+	}
+}
+
+void mouseMoved(sf::Event* event) {
+	// Right mouse pressed
+	if (allowRotation) {
+		float rotY = event->mouseMove.x - 500;
+		float rotX = event->mouseMove.y - 375;
+
+		rotation.y += rotY / 100;
+		rotation.x += rotX / 100;
+
+		sf::Mouse::setPosition({ 500, 375 }, *window);
+	}
+}
+
+void mouseReleased(sf::Event* event) {
+	if (event->mouseButton.button == sf::Mouse::Right) {
+		allowRotation = false;
 	}
 }

@@ -63,7 +63,7 @@ int main() {
 	Clock deltaClock;
 
 	// Initializes global variable within main.cpp before starting
-	init();
+	init(&window);
 
 	// Check for window events
 	Event event;
@@ -95,6 +95,20 @@ int main() {
 			// Stop moving in whichever direction was released
 			if (event.type == Event::KeyReleased) {
 				keyReleased(&event);
+			}
+
+			// Mouse pressed
+			if (event.type == Event::MouseButtonPressed) {
+				mousePressed(&event);
+			}
+
+			// Mouse released
+			if (event.type == Event::MouseButtonReleased) {
+				mouseReleased(&event);
+			}
+
+			if (event.type == Event::MouseMoved) {
+				mouseMoved(&event);
 			}
 		}
 
