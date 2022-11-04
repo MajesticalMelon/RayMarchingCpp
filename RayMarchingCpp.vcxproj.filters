@@ -62,7 +62,9 @@
     <None Include="Marcher.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="FXAA.frag" />
+    <None Include="FXAA.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RMShape.h">

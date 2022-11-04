@@ -76,7 +76,7 @@ Vector3f rotateZYX(Vector3f p, Vector3f rot) {
 	return rotatedPoint;
 }
 
-sf::Vector3f inverseRotatXYZ(sf::Vector3f p, sf::Vector3f rot)
+sf::Vector3f inverseRotateXYZ(sf::Vector3f p, sf::Vector3f rot)
 {
 	Transform trans;
 	priv::Matrix<3, 3> rotation(trans);

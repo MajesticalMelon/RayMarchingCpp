@@ -36,6 +36,7 @@ Vec3 rm::VectorHelper::normalize(Vec3 p) {
 #pragma endregion
 
 #pragma region Init
+const float rm::RMShape::EPSILON = 0.01f;
 std::vector<rm::RMShape*> rm::RMShape::shapes;
 std::vector<rm::RMMaterial*> rm::RMShape::materials({ &defaultMat });
 
@@ -251,7 +252,7 @@ int rm::RMShape::getIndex() {
 float rm::RMShape::getSignedDistance(Vec3 p)
 {
     float signedDistance;
-    p = inverseRotatXYZ(p - position, rotation);
+    p = inverseRotateXYZ(p - position, rotation);
 
     switch (type) {
     case rm::Invalid:
@@ -286,7 +287,7 @@ float rm::RMShape::getSignedDistance(Vec3 p)
         break;
 
     default:
-        signedDistance = 0.f;
+        signedDistance = FLT_MAX;
         break;
     }
 
@@ -311,7 +312,34 @@ const rm::RMMaterial& rm::RMShape::getMaterial() {
 }
 #pragma endregion
 
-bool rm::RMMaterial::operator==(RMMaterial const& mat)
-{
+bool rm::RMMaterial::operator==(RMMaterial const& mat) {
     return this == &mat;
+}
+
+rm::RMShape* rm::RMShape::raymarch(Vec3 origin, Vec3 direction, float maxDistance, float maxSteps) {
+    float totalDistance = 0.f;
+    RMShape* closest = nullptr;
+    for (int i = 0; i < maxSteps; i++) {
+        Vec3 pos = origin + direction * totalDistance;
+        float distance = maxDistance;
+        for (auto const& rmShape : shapes) {
+            float check = rmShape->getSignedDistance(pos);
+            if (check < distance) {
+                distance = check;
+                closest = rmShape;
+            }
+        }
+
+        if (distance < EPSILON) {
+            return closest;
+        }
+
+        totalDistance += distance;
+
+        if (totalDistance > maxDistance) {
+            return nullptr;
+        }
+    }
+
+    return nullptr;
 }

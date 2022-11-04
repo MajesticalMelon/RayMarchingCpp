@@ -97,5 +97,13 @@ namespace rm {
         static RMShape* createCapsule(Vec3 pos1, Vec3 pos2, float r);
         // Infinite plane defined by its normal vector, n and offset from the origin, h
         static RMShape* createPlane(Vec3 pos, Vec3 rot, Vec3 n, float h);
+
+        /*
+        Emulates a raycast from typical renderers.
+        If EPSILON isn't low enough then it may not work
+        */
+        static RMShape* raymarch(Vec3 origin, Vec3 direction, float maxDistance = 100, float maxSteps = 50);
+
+        static const float EPSILON;
     };
 }

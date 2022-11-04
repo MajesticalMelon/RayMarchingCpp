@@ -44,6 +44,7 @@ rm::RMMaterial lineMat;
 rm::RMMaterial groundMat;
 rm::RMMaterial sphereMat3;
 rm::RMMaterial boxMat2;
+rm::RMMaterial selectedMat;
 
 // Verlet Objects
 VerletObject* testSphere;
@@ -61,6 +62,10 @@ void init(sf::Window* win) {
 	gameTime = 0;
 
 	userInput = rm::None;
+
+	selectedMat.albedo = sf::Glsl::Vec4(1.0f, 0.55f, 0.0f, 1.f);
+	selectedMat.roughness = 1.f;
+	selectedMat.metallic = 0.f;
 
 	// Redoing sphere stuff
 	sphere1 = rm::RMShape::createSphere(
@@ -128,8 +133,6 @@ void init(sf::Window* win) {
 	/*testSphere = new VerletObject(sphere2);
 	testBox = new VerletObject(box2);
 	testPlane = new VerletObject(ground, true);*/
-
-	printf("%u\n", rm::RMShape::materials.size());
 }
 
 void draw(sf::Shader* shader, sf::RectangleShape screen) {
@@ -348,6 +351,13 @@ void mousePressed(sf::Event* event) {
 		allowRotation = true;
 		sf::Mouse::setPosition({ 500, 375 }, *window);
 		window->setMouseCursorVisible(false);
+	}
+
+	if (event->mouseButton.button == sf::Mouse::Left) {
+		rm::RMShape* hit = rm::RMShape::raymarch(position, forward, 10.f, 1000.f);
+		if (hit != nullptr) {
+			hit->setMaterial(selectedMat);
+		}
 	}
 }
 
