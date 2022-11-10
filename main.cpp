@@ -36,6 +36,8 @@ rm::RMShape* ground;
 rm::RMShape* sphere3;
 rm::RMShape* box2;
 
+rm::RMShape* selected;
+
 // Materials
 rm::RMMaterial sphereMat1;
 rm::RMMaterial boxMat1;
@@ -44,6 +46,8 @@ rm::RMMaterial lineMat;
 rm::RMMaterial groundMat;
 rm::RMMaterial sphereMat3;
 rm::RMMaterial boxMat2;
+
+rm::RMMaterial previousMat;
 rm::RMMaterial selectedMat;
 
 // Verlet Objects
@@ -66,6 +70,10 @@ void init(sf::Window* win) {
 	selectedMat.albedo = sf::Glsl::Vec4(1.0f, 0.55f, 0.0f, 1.f);
 	selectedMat.roughness = 1.f;
 	selectedMat.metallic = 0.f;
+
+	previousMat.albedo = sf::Glsl::Vec4(-1, -1, -1, -1);
+
+	selected = nullptr;
 
 	// Redoing sphere stuff
 	sphere1 = rm::RMShape::createSphere(
@@ -354,9 +362,21 @@ void mousePressed(sf::Event* event) {
 	}
 
 	if (event->mouseButton.button == sf::Mouse::Left) {
+		// Reset selected shape's material
+		if (previousMat.albedo.x > 0 && selected != nullptr) {
+			selected->setMaterial(previousMat);
+		}
+
+		// Raymarch
 		rm::RMShape* hit = rm::RMShape::raymarch(position, forward, 10.f, 1000.f);
 		if (hit != nullptr) {
+			// Save hit shape's material and set material to selected
+			if (hit->getMaterial() != selectedMat) {
+				previousMat = hit->getMaterial();
+			}
 			hit->setMaterial(selectedMat);
+			selected = hit;
+			printf("%d\n", hit->getMaterial() == previousMat);
 		}
 	}
 }

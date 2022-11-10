@@ -13,8 +13,7 @@ const float TOLERANCE = 0.001;
 const int MAX_STEPS = 500;
 const float PI = 3.14159265359;
 const float GAMMA = 2.5;
-const int MAX_BOUNCES = 1;
-const int MAX_SAMPLES = 1;
+const int MAX_BOUNCES = 3;
 const float SHADOW_STRENGTH = 0.5;
 const int AO_STEP_SIZE = 1;
 
@@ -465,24 +464,35 @@ void main() {
 
     // Indirect illumination (Need to implement progressive rendering to get a better look)
     // Doesn't put reflections on transparent objects yet
+    Shape bounceScene = scene;
     vec4 accCol = vec4(0);
     vec4 indCol = vec4(0);
     vec3 sn = getNormal(pos);
-    vec3 random = vec3(
-                rand(pos.xy) + time, 
-                rand(pos.yz) + time, 
-                rand(pos.xz) + time
-            ) - 0.5;
-    random *= scene.roughness;
-    vec3 refd = reflect(rd, sn + random);
-    dist = RayMarch(pos + sn * TOLERANCE * 2, refd, indCol);
-    vec3 refpos = pos + refd * dist;
+    vec3 refpos = pos;
 
-    float indShade = getLight(refpos, 0, indCol);
-    //indCol.a = SceneSDF(refpos).metallic;
-    accCol += vec4(vec3(indShade), 1.) * indCol;
+    // TODO: properly shade
+    for (int i = 0; i < MAX_BOUNCES; i++) {
+        vec3 random = vec3(
+                    rand(pos.xy) + time, 
+                    rand(pos.yz) + time, 
+                    rand(pos.xz) + time
+                ) - 0.5;
+        random *= bounceScene.roughness;
+        vec3 refd = reflect(rd, sn + random);
+        dist = RayMarch(refpos + sn * TOLERANCE, refd, indCol);
+        refpos = refpos + refd * dist;
 
-    difCol = mix(difCol, accCol, scene.metallic);
+        float indShade = getLight(refpos, 0, indCol);
+        //indCol.a = SceneSDF(refpos).metallic;
+        accCol += indCol * indShade;
+        sn = getNormal(refpos);
+        bounceScene = SceneSDF(refpos);
+    }
+
+    accCol /= MAX_BOUNCES;
+    accCol.a = 1;
+
+    difCol = mix(difCol, accCol, min(scene.metallic, 0.9));
     difCol *= shade * ao;
 
     difCol.a = 1;

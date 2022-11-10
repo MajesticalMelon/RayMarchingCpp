@@ -307,13 +307,17 @@ Vec3 rm::RMShape::getNormal(Vec3 p)
     return VectorHelper::normalize(n);
 }
 
-const rm::RMMaterial& rm::RMShape::getMaterial() {
+rm::RMMaterial& rm::RMShape::getMaterial() {
     return *materials[materialIndex];
 }
 #pragma endregion
 
 bool rm::RMMaterial::operator==(RMMaterial const& mat) {
     return this == &mat;
+}
+
+bool rm::RMMaterial::operator!=(RMMaterial const& mat) {
+    return this != &mat;
 }
 
 rm::RMShape* rm::RMShape::raymarch(Vec3 origin, Vec3 direction, float maxDistance, float maxSteps) {

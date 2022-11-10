@@ -27,10 +27,11 @@ namespace rm {
     struct RMMaterial {
         Vec4 albedo = sf::Color::White;
         float roughness = 0.f;
-        float metallic = 0.f;
+        float metallic = 1.f;
         bool emissive = false;
 
         bool operator==(RMMaterial const& mat);
+        bool operator!=(RMMaterial const& mat);
     };
 
     static RMMaterial defaultMat;
@@ -84,7 +85,7 @@ namespace rm {
         Vec3 getParam2();
         rm::ShapeType getType();
         int getIndex();
-        const RMMaterial& getMaterial();
+        RMMaterial& getMaterial();
 
         float getSignedDistance(Vec3 p);
         Vec3 getNormal(Vec3 p);
