@@ -333,7 +333,7 @@ float RayMarch(vec3 ro, vec3 rd, out vec4 dCol) {
             accCol.a *= (1 - scene.color.a);
                 
             if (scene.color.a < 1 - TOLERANCE)
-                distTotal += TOLERANCE * 10;
+                distTotal += TOLERANCE;
 
             if (accCol.a < 0.05) {
                 dCol = accCol;
@@ -386,7 +386,7 @@ float lightMarch(vec3 ro, vec3 rd, int lightID, float k) {
             accCol.a *= (1 - scene.color.a);
                 
             if (scene.color.a <= 1 - TOLERANCE)
-                distTotal += TOLERANCE * 10;
+                distTotal += TOLERANCE;
 
             if (accCol.a < TOLERANCE) {
                 return res;
@@ -423,7 +423,7 @@ float getLight(vec3 p, int lightID, vec4 color) {
     float dif = clamp(dot(n, l), SHADOW_STRENGTH, 1.);
     
     // Diffuse lighting and shadows
-    float light = lightMarch(p + n * TOLERANCE * 2, l, lightID, 28);
+    float light = lightMarch(p + n * TOLERANCE, l, lightID, 28);
 
     return light * dif;
 }
@@ -470,8 +470,8 @@ void main() {
     vec3 sn = getNormal(pos);
     vec3 refpos = pos;
 
-    // TODO: properly shade
-    for (int i = 0; i < MAX_BOUNCES; i++) {
+    int bounce = 0;
+    for (bounce = 0; bounce < MAX_BOUNCES; bounce++) {
         vec3 random = vec3(
                     rand(pos.xy) + time, 
                     rand(pos.yz) + time, 
@@ -480,16 +480,20 @@ void main() {
         random *= bounceScene.roughness;
         vec3 refd = reflect(rd, sn + random);
         dist = RayMarch(refpos + sn * TOLERANCE, refd, indCol);
+
         refpos = refpos + refd * dist;
 
         float indShade = getLight(refpos, 0, indCol);
         //indCol.a = SceneSDF(refpos).metallic;
         accCol += indCol * indShade;
+
+        if (dist > MAX_DISTANCE - TOLERANCE || indCol.a < 0) break;
+
         sn = getNormal(refpos);
         bounceScene = SceneSDF(refpos);
     }
 
-    accCol /= MAX_BOUNCES;
+    accCol /= bounce + 1;
     accCol.a = 1;
 
     difCol = mix(difCol, accCol, min(scene.metallic, 0.9));
